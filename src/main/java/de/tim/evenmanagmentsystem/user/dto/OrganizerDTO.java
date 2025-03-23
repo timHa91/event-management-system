@@ -1,6 +1,5 @@
 package de.tim.evenmanagmentsystem.user.dto;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,20 +10,25 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrganizerRegistrationDTO extends UserRegistrationDTO {
+public class OrganizerDTO {
     @NotBlank(message = "Organization name is required")
     private String organizationName;
 
     @NotBlank(message = "Description is required")
     private String description;
 
+    @NotBlank(message = "Contact phone is required")
+    private String contactPhone;
+
     @NotBlank(message = "Contact email is required")
-    @Email(message = "Invalid email format")
     private String contactEmail;
 
-    @NotBlank(message = "Company registration number is required")
-    private String companyRegistrationNumber;
+    @NotBlank(message = "Website is required")
+    private String website;
 
-    @NotBlank(message = "Bank account info is required")
-    private String bankAccountInfo;
+    @NotBlank(message = "Logo URL is required")
+    private String logoUrl;
+
+    // Optional: Zusammenfassende Informationen
+    private int eventCount;
 }

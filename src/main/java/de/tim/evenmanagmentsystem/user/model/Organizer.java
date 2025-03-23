@@ -5,8 +5,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "organizer")
@@ -125,5 +130,22 @@ public class Organizer extends User{
                 ", website='" + website + '\'' +
                 ", logoUrl='" + logoUrl + '\'' +
                 '}';
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority(role.name().substring(5))) // Entferne "ROLE_" Präfix
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public String getPassword() {
+        return getEncodedPasswordForAuthentication();
+    }
+
+    @Override
+    public String getUsername() {
+        return getEmail();
     }
 }
