@@ -29,11 +29,9 @@ public class Token {
     @Column(name = "token_type", nullable = false)
     private TokenType tokenType = TokenType.BEARER;
 
-    @NotNull(message = "Revoked is required")
     @Column(name = "revoked", nullable = false)
     private boolean revoked = false;
 
-    @NotNull(message = "Expired is required")
     @Column(name = "expired", nullable = false)
     private boolean expired = false;
 

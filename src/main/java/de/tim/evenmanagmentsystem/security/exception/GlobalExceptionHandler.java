@@ -185,6 +185,26 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Behandelt AccountLockedException.
+     *
+     * @param ex Die Exception
+     * @return Eine Fehlerantwort mit HTTP-Status 429 (Too Many Requests)
+     */
+    @ExceptionHandler(AccountLockedException.class)
+    public ResponseEntity<ErrorResponse> handleRuntimeException(AccountLockedException ex) {
+        log.warn("Account locked error: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                "ACCOUNT_LOCKED",
+                ex.getMessage(),
+                HttpStatus.TOO_MANY_REQUESTS.value(),
+                LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    /**
      * Behandelt alle anderen Exceptions.
      *
      * @param ex Die Exception

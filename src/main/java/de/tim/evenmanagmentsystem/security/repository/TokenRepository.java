@@ -28,7 +28,7 @@ public interface TokenRepository extends JpaRepository<Token, Long> {
                AND t.revoked = false
                AND t.expiresAt > :now
             """)
-    List<Token> findAllValidTokenByUser(
+    List<Token> findAllValidTokensByUser(
             @Param("userId") Long userId,
             @Param("now") LocalDateTime now);
 
@@ -43,7 +43,7 @@ public interface TokenRepository extends JpaRepository<Token, Long> {
                 AND t.revoked = false
                 AND t.expiresAt > :now
             """)
-    List<Token> findAllValidTokenByUserAndType(
+    List<Token> findAllValidTokensByUserAndType(
             @Param("userId") Long userId,
             @Param("tokenType") TokenType type,
             @Param("now") LocalDateTime now);

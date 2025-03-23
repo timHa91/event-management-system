@@ -119,4 +119,9 @@ public class RegistrationRequest {
      * Die Firmennummer der Organisation.
      */
     private String companyRegistrationNumber;
+
+    /**
+     * Die Bank-Account-Info der Organisation.
+     */
+    private String bankAccountInfo;
 }

@@ -3,22 +3,24 @@ package de.tim.evenmanagmentsystem.security.service;
 import de.tim.evenmanagmentsystem.security.dto.AuthenticationRequest;
 import de.tim.evenmanagmentsystem.security.dto.AuthenticationResponse;
 import de.tim.evenmanagmentsystem.security.dto.RefreshTokenRequest;
+import de.tim.evenmanagmentsystem.security.dto.RegistrationRequest;
+import de.tim.evenmanagmentsystem.security.exception.AccountDisabledException;
+import de.tim.evenmanagmentsystem.security.exception.AccountLockedException;
 import de.tim.evenmanagmentsystem.security.exception.EmailAlreadyExistsException;
 import de.tim.evenmanagmentsystem.security.exception.InvalidTokenException;
 import de.tim.evenmanagmentsystem.security.model.Token;
 import de.tim.evenmanagmentsystem.security.model.TokenType;
 import de.tim.evenmanagmentsystem.security.repository.TokenRepository;
-import de.tim.evenmanagmentsystem.user.dto.AttendeeRegistrationDTO;
-import de.tim.evenmanagmentsystem.user.dto.OrganizerRegistrationDTO;
-import de.tim.evenmanagmentsystem.user.model.*;
+import de.tim.evenmanagmentsystem.user.model.Attendee;
+import de.tim.evenmanagmentsystem.user.model.Organizer;
+import de.tim.evenmanagmentsystem.user.model.User;
+import de.tim.evenmanagmentsystem.user.model.UserRole;
 import de.tim.evenmanagmentsystem.user.repository.AttendeeRepository;
 import de.tim.evenmanagmentsystem.user.repository.OrganizerRepository;
 import de.tim.evenmanagmentsystem.user.repository.UserRepository;
-import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AccountStatusUserDetailsChecker;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,12 +30,19 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.List;
 
+/**
+ * Service für Authentifizierungsoperationen.
+ * Implementiert die Geschäftslogik für Registrierung, Anmeldung, Token-Erneuerung und Abmeldung.
+ */
 @Service
-@Slf4j
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationService {
 
     private final UserRepository userRepository;
@@ -44,134 +53,124 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
+    private final LoginAttemptService loginAttemptService;
 
     /**
-     * Registriert einen neuen Teilnehmer (Attendee).
+     * Registriert einen neuen Teilnehmer.
      *
-     * @param request Die Registrierungsdaten
-     * @return Eine Antwort mit Access- und Refresh-Token
-     * @throws EmailAlreadyExistsException Wenn die E-Mail bereits verwendet wird
+     * @param request Die Registrierungsanfrage
+     * @return Eine Authentifizierungsantwort mit Tokens und Benutzerinformationen
+     * @throws EmailAlreadyExistsException wenn die E-Mail-Adresse bereits verwendet wird
      */
     @Transactional
-    public AuthenticationResponse registerAttendee(@Valid AttendeeRegistrationDTO request) {
-        log.info("Registering new attendee with email: {}", request.getEmail());
-
-        // Prüfe, ob E-Mail bereits existiert
+    public AuthenticationResponse registerAttendee(RegistrationRequest request) {
+        // Überprüfe, ob die E-Mail bereits verwendet wird
         if (userRepository.existsByEmail(request.getEmail())) {
-            log.warn("Email already exits: {}", request.getEmail());
-            throw new EmailAlreadyExistsException("Email already in use");
+            throw new EmailAlreadyExistsException("Email already in use: " + request.getEmail());
         }
 
+        // Validiere attendee-spezifische Felder
+        validateAttendeeFields(request);
+
         // Erstelle Attendee-Entität
-        var attendee = new Attendee(
-                request.getEmail(),
-                passwordEncoder.encode(request.getPassword()),
-                request.getFirstName(),
-                request.getLastName(),
-                request.getPhoneNumber(),
-                request.getDateOfBirth(),
-                request.getAddress(),
-                request.getCity(),
-                request.getPostalCode(),
-                request.getCountry()
-        );
-        attendee.setUserStatus(UserStatus.ACTIVE);
+        Attendee attendee = new Attendee();
+        attendee.setEmail(request.getEmail());
+        attendee.setPassword(passwordEncoder.encode(request.getPassword()));
+        attendee.setFirstName(request.getFirstName());
+        attendee.setLastName(request.getLastName());
+        attendee.setPhoneNumber(request.getPhoneNumber());
+        attendee.setDateOfBirth(request.getDateOfBirth());
+        attendee.setAddress(request.getAddress());
+        attendee.setCity(request.getCity());
+        attendee.setPostalCode(request.getPostalCode());
+        attendee.setCountry(request.getCountry());
+
+        // Setze Standardwerte
         attendee.setActive(true);
 
+        // Setze Rollen
         attendee.addRole(UserRole.ROLE_USER);
         attendee.addRole(UserRole.ROLE_ATTENDEE);
 
         // Speichere Attendee
-        var savedAttendee = attendeeRepository.save(attendee);
-        log.debug("Attendee saved with ID: {}", savedAttendee.getId());
+        attendee = attendeeRepository.save(attendee);
 
         // Generiere Tokens
-        var jwtToken = generateAccessToken(savedAttendee);
-        var refreshToken = generateRefreshToken(savedAttendee);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(attendee.getEmail());
+        String accessToken = jwtService.generateToken(userDetails);
+        String refreshToken = jwtService.generateRefreshToken(userDetails);
 
-        log.info("Attendee registered successfully: {}", savedAttendee.getEmail());
+        // Speichere Access-Token in der Datenbank
+        saveToken(attendee, accessToken, TokenType.BEARER, jwtService.extractExpirationAsLocalDateTime(accessToken));
 
-        // Erstelle und gib die Antwort zurück
-        return AuthenticationResponse.builder()
-                .accessToken(jwtToken)
-                .refreshToken(refreshToken)
-                .userType("ATTENDEE")
-                .userId(savedAttendee.getId())
-                .email(savedAttendee.getEmail())
-                .firstName(savedAttendee.getFirstName())
-                .lastName(savedAttendee.getLastName())
-                .build();
+        // Erstelle und gib Antwort zurück
+        return buildAuthResponse(attendee, accessToken, refreshToken);
     }
 
     /**
-     * Registriert einen neuen Veranstalter (Organizer).
+     * Registriert einen neuen Veranstalter.
      *
-     * @param request Die Registrierungsdaten
-     * @return Eine Antwort mit Access- und Refresh-Token
-     * @throws EmailAlreadyExistsException Wenn die E-Mail bereits verwendet wird
+     * @param request Die Registrierungsanfrage
+     * @return Eine Authentifizierungsantwort mit Tokens und Benutzerinformationen
+     * @throws EmailAlreadyExistsException wenn die E-Mail-Adresse bereits verwendet wird
      */
     @Transactional
-    public AuthenticationResponse registerOrganizer(@Valid OrganizerRegistrationDTO request) {
-        log.info("Registering new organizer with email: {}", request.getEmail());
-
-        // Prüfe, ob E-Mail bereits existiert
+    public AuthenticationResponse registerOrganizer(RegistrationRequest request) {
+        // Überprüfe, ob die E-Mail bereits verwendet wird
         if (userRepository.existsByEmail(request.getEmail())) {
-            log.warn("Email already exists: {}", request.getEmail());
-            throw new EmailAlreadyExistsException("Email already in use");
+            throw new EmailAlreadyExistsException("Email already in use: " + request.getEmail());
         }
 
-        // Erstelle Organizer-Entität
-        var organizer = new Organizer(
-                request.getEmail(),
-                passwordEncoder.encode(request.getPassword()),
-                request.getFirstName(),
-                request.getLastName(),
-                request.getOrganizationName(),
-                request.getDescription(),
-                request.getCompanyRegistrationNumber(),
-                request.getBankAccountInfo()
-        );
+        // Validiere organizer-spezifische Felder
+        validateOrganizerFields(request);
 
-        organizer.setUserStatus(UserStatus.ACTIVE);
+        // Erstelle Organizer-Entität
+        Organizer organizer = new Organizer();
+        organizer.setEmail(request.getEmail());
+        organizer.setPassword(passwordEncoder.encode(request.getPassword()));
+        organizer.setFirstName(request.getFirstName());
+        organizer.setLastName(request.getLastName());
+        organizer.setOrganizationName(request.getOrganizationName());
+        organizer.setDescription(request.getDescription());
+        organizer.setContactPhone(request.getContactPhone());
+        organizer.setWebsite(request.getWebsite());
+
+        // Setze Standardwerte
         organizer.setActive(true);
 
+        // Setze Rollen
         organizer.addRole(UserRole.ROLE_USER);
         organizer.addRole(UserRole.ROLE_ORGANIZER);
 
-        var savedOrganizer = organizerRepository.save(organizer);
-        log.debug("Organizer saved with ID: {}", savedOrganizer.getId());
+        // Speichere Organizer
+        organizer = organizerRepository.save(organizer);
 
         // Generiere Tokens
-        var jwtToken = generateAccessToken(savedOrganizer);
-        var refreshToken = generateRefreshToken(savedOrganizer);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(organizer.getEmail());
+        String accessToken = jwtService.generateToken(userDetails);
+        String refreshToken = jwtService.generateRefreshToken(userDetails);
 
-        log.info("Organizer registered successfully: {}", savedOrganizer.getEmail());
+        // Speichere Access-Token in der Datenbank
+        saveToken(organizer, accessToken, TokenType.BEARER, jwtService.extractExpirationAsLocalDateTime(accessToken));
 
-        // Erstelle und gib die Antwort zurück
-        return AuthenticationResponse.builder()
-                .accessToken(jwtToken)
-                .refreshToken(refreshToken)
-                .userType("ORGANIZER")
-                .userId(savedOrganizer.getId())
-                .email(savedOrganizer.getEmail())
-                .firstName(savedOrganizer.getFirstName())
-                .lastName(savedOrganizer.getLastName())
-                .organizationName(savedOrganizer.getOrganizationName())
-                .build();
+        // Erstelle und gib Antwort zurück
+        return buildAuthResponse(organizer, accessToken, refreshToken);
     }
 
-
     /**
-     * Authentifiziert einen Benutzer und generiert neue Tokens.
+     * Authentifiziert einen Benutzer.
      *
-     * @param request Die Authentifizierungsdaten (E-Mail und Passwort)
-     * @return Eine Antwort mit Access- und Refresh-Token
-     * @throws BadCredentialsException Wenn die Anmeldedaten ungültig sind
-     * @throws UsernameNotFoundException Wenn der Benutzer nicht gefunden wird
+     * @param request Die Authentifizierungsanfrage
+     * @return Eine Authentifizierungsantwort mit Tokens und Benutzerinformationen
+     * @throws org.springframework.security.authentication.BadCredentialsException wenn die Anmeldedaten ungültig sind
+     * @throws AccountDisabledException wenn das Konto deaktiviert ist
      */
     @Transactional
-    public AuthenticationResponse authenticate(@Valid AuthenticationRequest request) {
-        log.info("Authenticating user: {}", request.getEmail());
+    public AuthenticationResponse authenticate(AuthenticationRequest request) {
+        // Überprüfe, ob die E-Mail-Adresse gesperrt ist
+        if (loginAttemptService.isBlocked(request.getEmail())) {
+            throw new AccountLockedException("Account is locked due to too many failed login attempts. Please try again later.");
+        }
 
         try {
             // Authentifiziere Benutzer mit Spring Security
@@ -182,181 +181,126 @@ public class AuthenticationService {
                     )
             );
 
-            log.debug("Authentication successful for user: {}", request.getEmail());
-
-            // Lade Benutzer
-            var user = userRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            // Lade Benutzer aus der Datenbank
+            User user = userRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + request.getEmail()));
 
             // Überprüfe, ob der Benutzer aktiv ist
-            var userDetailsChecker = new AccountStatusUserDetailsChecker();
-            userDetailsChecker.check(createUserDetails(user));
+            if (!user.isActive()) {
+                throw new AccountDisabledException("Account is disabled");
+            }
 
-            // Bestimme Benutzertyp
-            String userType = getUserType(user);
-
-            // Widerrufe alte Tokens
+            // Widerrufe alle existierenden Tokens
             revokeAllUserTokens(user);
 
             // Generiere neue Tokens
-            var accessToken = generateAccessToken(user);
-            var refreshToken = generateRefreshToken(user);
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String accessToken = jwtService.generateToken(userDetails);
+            String refreshToken = jwtService.generateRefreshToken(userDetails);
 
-            log.info("User authenticated successfully: {}", user.getEmail());
+            // Speichere Access-Token in der Datenbank
+            saveToken(user, accessToken, TokenType.BEARER, jwtService.extractExpirationAsLocalDateTime(accessToken));
 
-            // Erstelle und gib die Antwort zurück
-            AuthenticationResponse.AuthenticationResponseBuilder responseBuilder = AuthenticationResponse.builder()
-                    .accessToken(accessToken)
-                    .refreshToken(refreshToken)
-                    .userType(userType)
-                    .userId(user.getId())
-                    .email(user.getEmail())
-                    .firstName(user.getFirstName())
-                    .lastName(user.getLastName());
+            // Bei erfolgreicher Anmeldung
+            loginAttemptService.loginSucceeded(request.getEmail());
 
-            // Füge organisationName hinzu, wenn es sich um einen Organizer handelt
-            if (user instanceof Organizer) {
-                responseBuilder.organizationName(((Organizer) user).getOrganizationName());
-            }
-
-            return responseBuilder.build();
+            // Erstelle und gib Antwort zurück
+            return buildAuthResponse(user, accessToken, refreshToken);
         } catch (BadCredentialsException e) {
-            log.warn("Authentication failed for user: {}", request.getEmail());
+            // Bei fehlgeschlagener Anmeldung
+            loginAttemptService.loginFailed(request.getEmail());
             throw e;
         }
     }
 
     /**
-     * Erneuert ein Access-Token mit einem gültigen Refresh-Token.
+     * Erneuert ein Access-Token mit einem Refresh-Token.
      *
-     * @param request Der Refresh-Token-Request
-     * @return Eine Antwort mit neuem Access-Token und dem bestehenden Refresh-Token
-     * @throws InvalidTokenException Wenn der Refresh-Token ungültig ist
-     * @throws UsernameNotFoundException Wenn der Benutzer nicht gefunden wird
+     * @param request Die Token-Erneuerungsanfrage
+     * @return Eine Authentifizierungsantwort mit neuem Access-Token
+     * @throws InvalidTokenException wenn das Refresh-Token ungültig ist
      */
     @Transactional
-    public AuthenticationResponse refreshToken(@Valid RefreshTokenRequest request) {
-        log.info("Processing refresh token request");
-
-        // Extrahiere Refresh-Token
+    public AuthenticationResponse refreshToken(RefreshTokenRequest request) {
         String refreshToken = request.getRefreshToken();
 
-        // Extrahiere Benutzername aus Token
+        // Extrahiere E-Mail aus Token
         String userEmail;
         try {
             userEmail = jwtService.extractUsername(refreshToken);
         } catch (Exception e) {
-            log.warn("Invalid refresh token: {}", e.getMessage());
             throw new InvalidTokenException("Invalid refresh token");
         }
 
         if (userEmail == null) {
-            log.warn("No username found in refresh token");
             throw new InvalidTokenException("Invalid refresh token");
         }
 
-        log.debug("Extracted email from refresh token: {}", userEmail);
+        // Lade Benutzer aus der Datenbank
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + userEmail));
 
-        // Lade Benutzer
-        var user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> {
-                    log.warn("User not found with email: {}", userEmail);
-                    return new UsernameNotFoundException("User not found");
-                });
+        // Überprüfe, ob der Benutzer aktiv ist
+        if (!user.isActive()) {
+            throw new AccountDisabledException("Account is disabled");
+        }
 
-        // Lade Benutzerdetails
-        UserDetails userDetails = createUserDetails(user);
+        // Lade Benutzerdetails für Token-Validierung
+        UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
-        // Prüfe Token-Gültigkeit
+        // Überprüfe Refresh-Token
         if (!jwtService.isTokenValid(refreshToken, userDetails)) {
-            log.warn("Refresh token is invalid or expired");
             throw new InvalidTokenException("Invalid refresh token");
         }
-
-        // Prüfe, ob das Token in der Datenbank existiert und gültig ist
-        boolean isTokenValid = tokenRepository.findByToken(refreshToken)
-                .map(token -> !token.isExpired() && !token.isRevoked())
-                .orElse(false);
-
-        if (!isTokenValid) {
-            log.warn("Refresh token not found in database or revoked");
-            throw new InvalidTokenException("Invalid refresh token");
-        }
-
-        // Bestimme Benutzertyp
-        String userType = getUserType(user);
 
         // Generiere neues Access-Token
-        var accessToken = generateAccessToken(user);
+        String accessToken = jwtService.generateToken(userDetails);
 
-        log.info("Token refreshed successfully for user: {}", user.getEmail());
+        // Widerrufe alte Access-Tokens
+        revokeAllUserTokens(user);
 
-        // Erstelle und gib die Antwort zurück
-        AuthenticationResponse.AuthenticationResponseBuilder responseBuilder = AuthenticationResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken) // Gib das gleiche Refresh-Token zurück
-                .userType(userType)
-                .userId(user.getId())
-                .email(user.getEmail())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName());
+        // Speichere neues Access-Token
+        saveToken(user, accessToken, TokenType.BEARER, jwtService.extractExpirationAsLocalDateTime(accessToken));
 
-        // Füge organisationName hinzu, wenn es sich um einen Organizer handelt
-        if (user instanceof Organizer) {
-            responseBuilder.organizationName(((Organizer) user).getOrganizationName());
+        // Erstelle und gib Antwort zurück
+        return buildAuthResponse(user, accessToken, refreshToken);
+    }
+
+    /**
+     * Meldet einen Benutzer ab und widerruft sein Token.
+     *
+     * @param authHeader Der Authorization-Header mit dem Token
+     */
+    @Transactional
+    public void logout(String authHeader) {
+        // Überprüfe, ob der Header gültig ist
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return;
         }
 
-        return responseBuilder.build();
-    }
+        // Extrahiere Token
+        String jwt = authHeader.substring(7);
 
-    /**
-     * Generiert ein Access-Token für einen Benutzer und speichert es in der Datenbank.
-     *
-     * @param user Der Benutzer
-     * @return Das generierte Access-Token
-     */
-    private String generateAccessToken(User user) {
-        UserDetails userDetails = createUserDetails(user);
-        String jwtToken = jwtService.generateToken(userDetails);
-
-        // Berechne das Ablaufdatum
-        LocalDateTime expiresAt = jwtService.extractExpirationAsLocalDateTime(jwtToken);
-
-        // Speichere das Token in der Datenbank
-        saveUserToken(user, jwtToken, TokenType.BEARER, expiresAt);
-
-        return jwtToken;
-    }
-
-    /**
-     * Generiert ein Refresh-Token für einen Benutzer und speichert es in der Datenbank.
-     *
-     * @param user Der Benutzer
-     * @return Das generierte Refresh-Token
-     */
-    private String generateRefreshToken(User user) {
-        UserDetails userDetails = createUserDetails(user);
-        String refreshToken = jwtService.generateRefreshToken(userDetails);
-
-        // Berechne das Ablaufdatum
-        LocalDateTime expiresAt = jwtService.extractExpirationAsLocalDateTime(refreshToken);
-
-        // Speichere das Token in der Datenbank
-        saveUserToken(user, refreshToken, TokenType.REFRESH, expiresAt);
-
-        return refreshToken;
+        // Finde Token in der Datenbank
+        tokenRepository.findByToken(jwt).ifPresent(token -> {
+            // Widerrufe Token
+            token.setRevoked(true);
+            token.setExpired(true);
+            tokenRepository.save(token);
+            log.info("Token revoked: {}", token.getId());
+        });
     }
 
     /**
      * Speichert ein Token in der Datenbank.
      *
-     * @param user Der Benutzer
+     * @param user Der Benutzer, dem das Token gehört
      * @param jwtToken Das JWT
      * @param tokenType Der Token-Typ
-     * @param expiresAt Das Ablaufdatum
+     * @param expiresAt Der Zeitpunkt, an dem das Token abläuft
      */
-    private void saveUserToken(User user, String jwtToken, TokenType tokenType, LocalDateTime expiresAt) {
-        var token = Token.builder()
+    private void saveToken(User user, String jwtToken, TokenType tokenType, LocalDateTime expiresAt) {
+        Token token = Token.builder()
                 .user(user)
                 .token(jwtToken)
                 .tokenType(tokenType)
@@ -367,52 +311,104 @@ public class AuthenticationService {
                 .build();
 
         tokenRepository.save(token);
-        log.debug("Token saved to database: type={}, expires={}", tokenType, expiresAt);
+        log.debug("Token saved: {}", token.getId());
     }
 
     /**
-     * Widerruft alle gültigen Tokens eines Benutzers.
+     * Widerruft alle aktiven Tokens eines Benutzers.
      *
-     * @param user Der Benutzer
+     * @param user Der Benutzer, dessen Tokens widerrufen werden sollen
      */
     private void revokeAllUserTokens(User user) {
-        log.debug("Revoking all valid tokens for user: {}", user.getEmail());
-        tokenRepository.revokeAllUserTokens(user.getId());
+        List<Token> validUserTokens = tokenRepository.findAllValidTokensByUser(
+                user.getId(),
+                LocalDateTime.now()
+        );
+
+        if (validUserTokens.isEmpty()) {
+            return;
+        }
+
+        validUserTokens.forEach(token -> {
+            token.setExpired(true);
+            token.setRevoked(true);
+        });
+
+        tokenRepository.saveAll(validUserTokens);
+        log.debug("Revoked {} tokens for user: {}", validUserTokens.size(), user.getEmail());
     }
 
     /**
-     * Erstellt UserDetails für einen Benutzer.
+     * Erstellt eine Authentifizierungsantwort basierend auf dem Benutzer und den Tokens.
      *
-     * @param user Der Benutzer
-     * @return Die UserDetails
+     * @param user Der authentifizierte Benutzer
+     * @param accessToken Das Access-Token
+     * @param refreshToken Das Refresh-Token
+     * @return Eine Authentifizierungsantwort
      */
-    private UserDetails createUserDetails(User user) {
-        return org.springframework.security.core.userdetails.User
-                .withUsername(user.getEmail())
-                .password(user.getEncodedPasswordForAuthentication())
-                .roles(user.getRoles().stream()
-                        .map(role -> role.name().substring(5)) // Entferne "ROLE_" Präfix
-                        .toArray(String[]::new))
-                .accountExpired(!user.isActive())
-                .accountLocked(!user.isActive())
-                .credentialsExpired(false)
-                .disabled(!user.isActive())
-                .build();
-    }
+    private AuthenticationResponse buildAuthResponse(User user, String accessToken, String refreshToken) {
+        AuthenticationResponse.AuthenticationResponseBuilder builder = AuthenticationResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .userId(user.getId())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .expiresAt(extractExpiryDate(accessToken));
 
-    /**
-     * Bestimmt den Typ eines Benutzers.
-     *
-     * @param user Der Benutzer
-     * @return Der Benutzertyp als String
-     */
-    private String getUserType(User user) {
+        // Bestimme Benutzertyp und füge spezifische Informationen hinzu
         if (user instanceof Attendee) {
-            return "ATTENDEE";
+            builder.userType("ATTENDEE");
         } else if (user instanceof Organizer) {
-            return "ORGANIZER";
+            builder.userType("ORGANIZER");
+            builder.organizationName(((Organizer) user).getOrganizationName());
         } else {
-            return "USER";
+            builder.userType("USER");
+        }
+
+        return builder.build();
+    }
+
+    /**
+     * Extrahiert das Ablaufdatum eines Tokens als Unix-Timestamp.
+     *
+     * @param token Das JWT
+     * @return Der Zeitpunkt, an dem das Token abläuft, als Unix-Timestamp in Millisekunden
+     */
+    private Long extractExpiryDate(String token) {
+        Date expiryDate = jwtService.extractClaim(token, Claims::getExpiration);
+        return expiryDate != null ? expiryDate.getTime() : null;
+    }
+
+    /**
+     * Validiert die Felder für die Attendee-Registrierung.
+     *
+     * @param request Die Registrierungsanfrage
+     * @throws IllegalArgumentException wenn erforderliche Felder fehlen
+     */
+    private void validateAttendeeFields(RegistrationRequest request) {
+        if (request.getPhoneNumber() == null || request.getPhoneNumber().isBlank()) {
+            throw new IllegalArgumentException("Phone number is required for attendees");
+        }
+
+        if (request.getDateOfBirth() == null) {
+            throw new IllegalArgumentException("Date of birth is required for attendees");
+        }
+    }
+
+    /**
+     * Validiert die Felder für die Organizer-Registrierung.
+     *
+     * @param request Die Registrierungsanfrage
+     * @throws IllegalArgumentException wenn erforderliche Felder fehlen
+     */
+    private void validateOrganizerFields(RegistrationRequest request) {
+        if (request.getOrganizationName() == null || request.getOrganizationName().isBlank()) {
+            throw new IllegalArgumentException("Organization name is required for organizers");
+        }
+
+        if (request.getDescription() == null || request.getDescription().isBlank()) {
+            throw new IllegalArgumentException("Description is required for organizers");
         }
     }
 }

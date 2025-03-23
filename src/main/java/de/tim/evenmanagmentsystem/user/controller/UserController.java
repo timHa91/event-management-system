@@ -20,15 +20,14 @@ import java.util.Set;
 public class UserController {
 
     private final UserService userService;
-    private final UserMapper userMapper;
 
-    @GetMapping("/me")
-    public ResponseEntity<UserDTO> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
-        String email = userDetails.getUsername();
-        User currentUser = userService.findByEmail(email);
-
-        return ResponseEntity.ok(userMapper.toDTO(currentUser));
-    }
+//    @GetMapping("/me")
+//    public ResponseEntity<UserDTO> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
+//        String email = userDetails.getUsername();
+//        User currentUser = userService.findByEmail(email);
+//
+//        return ResponseEntity.ok(userMapper.toDTO(currentUser));
+//    }
 
     @PutMapping("/me/password")
     public ResponseEntity<Void> changePassword(

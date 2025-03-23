@@ -19,8 +19,9 @@ public class AttendeeController {
     private final AttendeeService attendeeService;
 
     @GetMapping("/me")
-    public ResponseEntity<AttendeeDTO> getCurrentAttendee(@AuthenticationPrincipal UserDetails userDetails) {
-        return null;
+    public ResponseEntity<Object> getCurrentAttendee(@AuthenticationPrincipal UserDetails userDetails) {
+        // Für Testzwecke geben wir null zurück
+        return ResponseEntity.ok(null);
     }
 
     @PutMapping("/me")
@@ -36,7 +37,8 @@ public class AttendeeController {
     }
 
     @GetMapping("/me/registrations")
-    public ResponseEntity<List<TicketRegistrationDTO>> getMyRegistrations(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<TicketRegistrationDTO>> getMyRegistrations(
+            @AuthenticationPrincipal UserDetails userDetails) {
         return null;
     }
 }

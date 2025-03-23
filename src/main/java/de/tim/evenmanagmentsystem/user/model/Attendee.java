@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class Attendee extends User{
 
     @NotBlank
-    @Size(min = 5, max = 20)
+    @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Phone number must be between 10 and 15 digits")
     @Column(name = "phone_number", nullable = false, unique = true, length = 20)
     private String phoneNumber;
 
@@ -95,11 +95,11 @@ public class Attendee extends User{
         this.phoneNumber = phoneNumber;
     }
 
-    public @NotBlank LocalDate getDateOfBirth() {
+    public @NotNull LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(@NotBlank LocalDate dateOfBirth) {
+    public void setDateOfBirth(@NotNull LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 
@@ -190,17 +190,7 @@ public class Attendee extends User{
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.name().substring(5))) // Entferne "ROLE_" Präfix
+                .map(role -> new SimpleGrantedAuthority(role.name())) // Behalte "ROLE_" Präfix
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public String getPassword() {
-        return getEncodedPasswordForAuthentication();
-    }
-
-    @Override
-    public String getUsername() {
-        return getEmail();
     }
 }

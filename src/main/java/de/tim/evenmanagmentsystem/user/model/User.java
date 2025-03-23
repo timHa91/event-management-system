@@ -46,11 +46,11 @@ public abstract class User implements UserDetails {
     @NotNull
     @CreatedDate
     @Column(name = "created_date", nullable = false, updatable = false)
-    private LocalDateTime createdDate;
+    private LocalDateTime createdAt;
 
     @LastModifiedDate
     @Column(name = "last_modified_date")
-    private LocalDateTime lastModifiedDate;
+    private LocalDateTime lastModifiedAt;
 
     @NotNull
     @Column(name = "active", nullable = false)
@@ -69,6 +69,11 @@ public abstract class User implements UserDetails {
     @Column(name = "role")
     private Set<UserRole> roles = new HashSet<>();
 
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
     public User() {}
 
     public User(String email, String password, String firstName, String lastName) {
@@ -76,7 +81,18 @@ public abstract class User implements UserDetails {
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.createdDate = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public void removeRole(UserRole role) {
+        this.roles.remove(role);
+    }
+
+    public void setRoles(Set<UserRole> roles) {
+        this.roles.clear();
+        if (roles != null) {
+            this.roles.addAll(roles);
+        }
     }
 
     public String getFullName() {
@@ -132,16 +148,16 @@ public abstract class User implements UserDetails {
         this.lastName = lastName;
     }
 
-    public @NotNull LocalDateTime getCreatedDate() {
-        return createdDate;
+    public @NotNull LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public LocalDateTime getLastModifiedDate() {
-        return lastModifiedDate;
+    public LocalDateTime getLastModifiedAt() {
+        return lastModifiedAt;
     }
 
-    public void setLastModifiedDate(LocalDateTime lastModifiedDate) {
-        this.lastModifiedDate = lastModifiedDate;
+    public void setLastModifiedAt(LocalDateTime lastModifiedDate) {
+        this.lastModifiedAt = lastModifiedDate;
     }
 
     @NotNull
@@ -159,6 +175,10 @@ public abstract class User implements UserDetails {
 
     public void setUserStatus(UserStatus userStatus) {
         this.userStatus = userStatus;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     @Override
@@ -180,11 +200,41 @@ public abstract class User implements UserDetails {
                 ", email='" + email + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
-                ", createdDate=" + createdDate +
-                ", lastModifiedDate=" + lastModifiedDate +
+                ", createdDate=" + createdAt +
+                ", lastModifiedDate=" + lastModifiedAt +
                 ", active=" + active +
                 ", userStatus=" + userStatus +
                 ", roles=" + roles +
                 '}';
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return userStatus != UserStatus.EXPIRED;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return userStatus != UserStatus.LOCKED;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true; // Oder Implementierung basierend auf einem Passwort-Ablaufdatum
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return active;
+    }
+
+    @Override
+    public String getPassword() {
+        return this.password;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.email;
     }
 }

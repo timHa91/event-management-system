@@ -9,10 +9,10 @@ import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
-    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
-
-    UserDTO toDTO(User user);
-
-    @Mapping(target = "password", ignore = true)
-    User toEntity(UserRegistrationDTO dto);
+//    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
+//
+//    UserDTO toDTO(User user);
+//
+//    @Mapping(target = "password", ignore = true)
+//    User toEntity(UserRegistrationDTO dto);
 }
