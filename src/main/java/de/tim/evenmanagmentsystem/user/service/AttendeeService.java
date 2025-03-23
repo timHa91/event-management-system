@@ -1,7 +1,7 @@
 package de.tim.evenmanagmentsystem.user.service;
 
 import de.tim.evenmanagmentsystem.user.dto.AttendeeRegistrationDTO;
-import de.tim.evenmanagmentsystem.user.exception.EmailAlreadyExistsException;
+import de.tim.evenmanagmentsystem.common.exception.EmailAlreadyExistsException;
 import de.tim.evenmanagmentsystem.user.model.Attendee;
 import de.tim.evenmanagmentsystem.user.model.UserRole;
 import de.tim.evenmanagmentsystem.user.model.UserStatus;
