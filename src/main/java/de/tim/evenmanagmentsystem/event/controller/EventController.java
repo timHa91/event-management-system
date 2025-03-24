@@ -1,4 +1,4 @@
-package de.tim.evenmanagmentsystem.user.controller;
+package de.tim.evenmanagmentsystem.event.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

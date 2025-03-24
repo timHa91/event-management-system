@@ -1,5 +1,6 @@
 package de.tim.evenmanagmentsystem.security.e2e;
 
+import de.tim.evenmanagmentsystem.common.model.Address;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -76,10 +77,7 @@ public abstract class BaseE2ETest {
         String randomDigits = String.format("123%07d", (int) (Math.random() * 10000000));
         registrationRequest.put("phoneNumber", randomDigits);
         registrationRequest.put("dateOfBirth", "1990-01-01");
-        registrationRequest.put("address", "Teststraße 123");
-        registrationRequest.put("city", "Teststadt");
-        registrationRequest.put("country", "Deutschland");
-        registrationRequest.put("postalCode", "12345");
+        registrationRequest.put("address", new Address("city", "state", "zip", "country"));
 
         Response response = RestAssured.given()
                 .contentType(ContentType.JSON)

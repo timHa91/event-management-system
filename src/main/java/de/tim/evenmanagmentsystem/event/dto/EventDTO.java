@@ -1,4 +1,4 @@
-package de.tim.evenmanagmentsystem.user.dto;
+package de.tim.evenmanagmentsystem.event.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -42,5 +42,4 @@ public class EventDTO {
 
   @NotNull(message = "Currency is required")
   private String currency;
-
 }

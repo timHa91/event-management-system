@@ -1,5 +1,6 @@
 package de.tim.evenmanagmentsystem.user.dto;
 
+import de.tim.evenmanagmentsystem.common.model.Address;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -24,17 +25,8 @@ public class AttendeeDTO extends UserDTO {
     @Min(value = 0, message = "Age must be greater than 0")
     private int age; // Berechnetes Feld
 
-    @NotBlank(message = "Address is required")
-    private String address;
-
-    @NotBlank(message = "City is required")
-    private String city;
-
-    @NotBlank(message = "Postal code is required")
-    private String postalCode;
-
-    @NotBlank(message = "Country is required")
-    private String country;
+    @NotNull(message = "Address is required")
+    private Address address;
 
     @NotNull(message = "Receive notifications is required")
     private boolean receiveNotifications;

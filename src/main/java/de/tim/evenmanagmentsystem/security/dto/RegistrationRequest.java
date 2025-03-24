@@ -1,6 +1,7 @@
 package de.tim.evenmanagmentsystem.security.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import de.tim.evenmanagmentsystem.common.model.Address;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -70,22 +71,7 @@ public class RegistrationRequest {
     /**
      * Die Adresse des Teilnehmers.
      */
-    private String address;
-
-    /**
-     * Die Stadt des Teilnehmers.
-     */
-    private String city;
-
-    /**
-     * Die Postleitzahl des Teilnehmers.
-     */
-    private String postalCode;
-
-    /**
-     * Das Land des Teilnehmers.
-     */
-    private String country;
+    private Address address;
 
     // Organizer-spezifische Felder
 

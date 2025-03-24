@@ -1,4 +1,4 @@
-package de.tim.evenmanagmentsystem.user.dto;
+package de.tim.evenmanagmentsystem.ticket.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

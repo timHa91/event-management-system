@@ -1,6 +1,6 @@
 package de.tim.evenmanagmentsystem.user.controller;
 
-import de.tim.evenmanagmentsystem.user.dto.EventDTO;
+import de.tim.evenmanagmentsystem.event.dto.EventDTO;
 import de.tim.evenmanagmentsystem.user.dto.OrganizerDTO;
 import de.tim.evenmanagmentsystem.user.dto.OrganizerStatisticsDTO;
 import de.tim.evenmanagmentsystem.user.dto.OrganizerUpdateDTO;

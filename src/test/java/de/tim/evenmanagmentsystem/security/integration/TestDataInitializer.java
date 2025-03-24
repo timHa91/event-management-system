@@ -1,5 +1,6 @@
 package de.tim.evenmanagmentsystem.security.integration;
 
+import de.tim.evenmanagmentsystem.common.model.Address;
 import de.tim.evenmanagmentsystem.security.model.Token;
 import de.tim.evenmanagmentsystem.security.model.TokenType;
 import de.tim.evenmanagmentsystem.security.repository.TokenRepository;
@@ -81,10 +82,7 @@ public class TestDataInitializer {
         attendee.setLastName("Attendee");
         attendee.setPhoneNumber("1234567890");
         attendee.setDateOfBirth(LocalDate.of(1991,4,10));
-        attendee.setAddress("Test Address");
-        attendee.setCity("Test City");
-        attendee.setCountry("Test Country");
-        attendee.setPostalCode("Test PostalCode");
+        attendee.setAddress(new Address("city", "state", "zip", "country"));
         attendee.setUserStatus(UserStatus.ACTIVE);
         attendee.setActive(true);
 

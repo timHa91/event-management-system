@@ -81,9 +81,6 @@ public class AuthenticationService {
         attendee.setPhoneNumber(request.getPhoneNumber());
         attendee.setDateOfBirth(request.getDateOfBirth());
         attendee.setAddress(request.getAddress());
-        attendee.setCity(request.getCity());
-        attendee.setPostalCode(request.getPostalCode());
-        attendee.setCountry(request.getCountry());
 
         // Setze Standardwerte
         attendee.setActive(true);

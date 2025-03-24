@@ -1,5 +1,6 @@
 package de.tim.evenmanagmentsystem.security.repository;
 
+import de.tim.evenmanagmentsystem.common.model.Address;
 import de.tim.evenmanagmentsystem.security.model.Token;
 import de.tim.evenmanagmentsystem.security.model.TokenType;
 import de.tim.evenmanagmentsystem.user.model.Attendee;
@@ -116,10 +117,7 @@ public class TokenRepositoryTest {
                 "User",
                 "12345678901" + uniqueIdentifier,  // Gültige Telefonnummer mit 11+ Ziffern
                 LocalDate.of(1991, 10, 4),
-                "address",
-                "city",
-                "postalCode",
-                "country"
+                new Address()
         );
         user.setUserStatus(UserStatus.ACTIVE);
         user.setActive(true);

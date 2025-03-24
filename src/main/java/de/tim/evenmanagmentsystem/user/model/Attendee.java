@@ -1,9 +1,7 @@
 package de.tim.evenmanagmentsystem.user.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.PrimaryKeyJoinColumn;
-import jakarta.persistence.Table;
+import de.tim.evenmanagmentsystem.common.model.Address;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -28,21 +26,9 @@ public class Attendee extends User {
     @Column(name = "date_of_birth", nullable = false)
     private LocalDate dateOfBirth;
 
-    @NotBlank
+    @Embedded
     @Column(name = "address", nullable = false)
-    private String address;
-
-    @NotBlank
-    @Column(name = "city", nullable = false)
-    private String city;
-
-    @NotBlank
-    @Column(name = "postal_code", nullable = false)
-    private String postalCode;
-
-    @NotBlank
-    @Column(name = "country", nullable = false)
-    private String country;
+    private Address address;
 
     @Column(name = "receive_notifications")
     private boolean receiveNotifications = false;
@@ -56,14 +42,11 @@ public class Attendee extends User {
     public Attendee() {
     }
 
-    public Attendee(String email, String password, String firstName, String lastName, String phoneNumber, LocalDate dateOfBirth, String address, String city, String postalCode, String country) {
+    public Attendee(String email, String password, String firstName, String lastName, String phoneNumber, LocalDate dateOfBirth, Address address) {
         super(email, password, firstName, lastName);
         this.phoneNumber = phoneNumber;
         this.dateOfBirth = dateOfBirth;
         this.address = address;
-        this.city = city;
-        this.postalCode = postalCode;
-        this.country = country;
     }
 
     // Validierung für zusammengehörige Felder
@@ -73,13 +56,6 @@ public class Attendee extends User {
                 (emergencyContactName != null && emergencyContactPhone != null);
     }
 
-    @AssertTrue(message = "Address information must be complete")
-    private boolean isAddressValid() {
-        return address != null && !address.trim().isEmpty() &&
-                city != null && !city.trim().isEmpty() &&
-                postalCode != null && !postalCode.trim().isEmpty() &&
-                country != null && !country.trim().isEmpty();
-    }
 
     public int getAge() {
         return Period.between(dateOfBirth, LocalDate.now()).getYears();
@@ -101,36 +77,12 @@ public class Attendee extends User {
         this.dateOfBirth = dateOfBirth;
     }
 
-    public @NotBlank String getAddress() {
+    public Address getAddress() {
         return address;
     }
 
-    public void setAddress(@NotBlank String address) {
+    public void setAddress(Address address) {
         this.address = address;
-    }
-
-    public @NotBlank String getCity() {
-        return city;
-    }
-
-    public void setCity(@NotBlank String city) {
-        this.city = city;
-    }
-
-    public @NotBlank String getPostalCode() {
-        return postalCode;
-    }
-
-    public void setPostalCode(@NotBlank String postalCode) {
-        this.postalCode = postalCode;
-    }
-
-    public @NotBlank String getCountry() {
-        return country;
-    }
-
-    public void setCountry(@NotBlank String country) {
-        this.country = country;
     }
 
     public boolean isReceiveNotifications() {
@@ -163,10 +115,6 @@ public class Attendee extends User {
         return "Attendee{" +
                 "phoneNumber='" + phoneNumber + '\'' +
                 ", dateOfBirth=" + dateOfBirth +
-                ", address='" + address + '\'' +
-                ", city='" + city + '\'' +
-                ", postalCode='" + postalCode + '\'' +
-                ", country='" + country + '\'' +
                 ", receiveNotifications=" + receiveNotifications +
                 ", emergencyContactName='" + emergencyContactName + '\'' +
                 ", emergencyContactPhone='" + emergencyContactPhone + '\'' +

@@ -1,5 +1,6 @@
 package de.tim.evenmanagmentsystem.security.service;
 
+import de.tim.evenmanagmentsystem.common.model.Address;
 import de.tim.evenmanagmentsystem.security.dto.AuthenticationRequest;
 import de.tim.evenmanagmentsystem.security.dto.AuthenticationResponse;
 import de.tim.evenmanagmentsystem.security.dto.RefreshTokenRequest;
@@ -259,10 +260,7 @@ public class AuthenticationServiceTest {
         attendee.setLastName("Attendee");
         attendee.setPhoneNumber("1234567890");
         attendee.setDateOfBirth(LocalDate.of(1990, 1, 1));
-        attendee.setAddress("123 Test St");
-        attendee.setCity("Test City");
-        attendee.setPostalCode("12345");
-        attendee.setCountry("Test Country");
+        attendee.setAddress(new Address());
         attendee.setActive(true);
         attendee.addRole(UserRole.ROLE_ATTENDEE);
 
@@ -315,10 +313,7 @@ public class AuthenticationServiceTest {
         attendee.setLastName("Attendee");
         attendee.setPhoneNumber("1234567890");
         attendee.setDateOfBirth(LocalDate.of(1990, 1, 1));
-        attendee.setAddress("123 Test St");
-        attendee.setCity("Test City");
-        attendee.setPostalCode("12345");
-        attendee.setCountry("Test Country");
+        attendee.setAddress(new Address());
         attendee.setActive(false);
         attendee.addRole(UserRole.ROLE_ATTENDEE);
 
@@ -347,10 +342,7 @@ public class AuthenticationServiceTest {
         attendee.setLastName("Attendee");
         attendee.setPhoneNumber("1234567890");
         attendee.setDateOfBirth(LocalDate.of(1990, 1, 1));
-        attendee.setAddress("123 Test St");
-        attendee.setCity("Test City");
-        attendee.setPostalCode("12345");
-        attendee.setCountry("Test Country");
+        attendee.setAddress(new Address());
         attendee.setActive(true);
         attendee.addRole(UserRole.ROLE_ATTENDEE);
 

@@ -6,10 +6,7 @@ import de.tim.evenmanagmentsystem.security.config.TestSecurityConfig;
 import de.tim.evenmanagmentsystem.security.controller.AuthenticationController;
 import de.tim.evenmanagmentsystem.security.dto.AuthenticationResponse;
 import de.tim.evenmanagmentsystem.security.dto.RegistrationRequest;
-import de.tim.evenmanagmentsystem.security.filter.JwtAuthenticationFilter;
-import de.tim.evenmanagmentsystem.security.repository.TokenRepository;
 import de.tim.evenmanagmentsystem.security.service.AuthenticationService;
-import de.tim.evenmanagmentsystem.security.service.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -17,7 +14,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -30,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthenticationController.class)
-@Import({ TestSecurityConfig.class, MockJwtServiceConfig.class })
+@Import({TestSecurityConfig.class, MockJwtServiceConfig.class})
 @ActiveProfiles("test")
 public class AuthenticationControllerIntegrationTest {
 
@@ -53,8 +49,8 @@ public class AuthenticationControllerIntegrationTest {
 
         // When & Then
         mockMvc.perform(post("/api/auth/register/attendee")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value("test.access.token"))
                 .andExpect(jsonPath("$.refreshToken").value("test.refresh.token"))

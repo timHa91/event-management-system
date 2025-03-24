@@ -1,10 +1,7 @@
 package de.tim.evenmanagmentsystem.user.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Past;
-import jakarta.validation.constraints.Size;
+import de.tim.evenmanagmentsystem.common.model.Address;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,15 +35,6 @@ public class UserRegistrationDTO {
     @Past(message = "Date of birth must be in the past")
     private LocalDate dateOfBirth;
 
-    @NotBlank(message = "Address is required")
-    private String address;
-
-    @NotBlank(message = "City is required")
-    private String city;
-
-    @NotBlank(message = "Postal code is required")
-    private String postalCode;
-
-    @NotBlank(message = "Country is required")
-    private String country;
+    @NotNull(message = "Address is required")
+    private Address address;
 }

@@ -1,4 +1,4 @@
-package de.tim.evenmanagmentsystem.user.dto;
+package de.tim.evenmanagmentsystem.ticket.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

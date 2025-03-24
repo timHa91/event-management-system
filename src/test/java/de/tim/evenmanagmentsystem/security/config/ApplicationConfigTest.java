@@ -1,5 +1,6 @@
 package de.tim.evenmanagmentsystem.security.config;
 
+import de.tim.evenmanagmentsystem.common.model.Address;
 import de.tim.evenmanagmentsystem.user.model.Attendee;
 import de.tim.evenmanagmentsystem.user.model.User;
 import de.tim.evenmanagmentsystem.user.repository.UserRepository;
@@ -49,10 +50,7 @@ public class ApplicationConfigTest {
         attendee.setLastName("User");
         attendee.setPhoneNumber("1234567890");
         attendee.setDateOfBirth(LocalDate.of(1990, 1, 1));
-        attendee.setAddress("123 Test St");
-        attendee.setCity("Test City");
-        attendee.setPostalCode("12345");
-        attendee.setCountry("Test Country");
+        attendee.setAddress(new Address());
         attendee.setActive(true);
 
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(attendee));
