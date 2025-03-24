@@ -16,10 +16,9 @@ import java.security.Key;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Service für die Verarbeitung von JSON Web Tokens (JWT).
@@ -77,11 +76,23 @@ public class JwtService {
      * @param userDetails Die Benutzerdetails, für die das Token generiert werden soll
      * @return Das generierte JWT
      */
-    public String generateToken(
-            Map<String, Object> extraClaims,
-            UserDetails userDetails
-    ) {
-        return buildToken(extraClaims, userDetails, jwtExpiration);
+    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+        // Füge die Rollen des Benutzers als Claim hinzu
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+        extraClaims.put("roles", roles);
+
+        // Füge eine eindeutige JWT ID hinzu
+        extraClaims.put("jti", UUID.randomUUID().toString());
+
+        return Jwts.builder()
+                .setClaims(extraClaims)
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
     /**

@@ -23,7 +23,6 @@ public class AuthenticationE2ETest extends BaseE2ETest {
         }
 
         @Test
-        @Disabled("Der komplette Authentifizierungsfluss hat ein Problem mit Token-Eindeutigkeit, das separat gelöst werden muss")
         public void testCompleteAuthenticationFlow() {
                 // 1. Registriere einen neuen Benutzer
                 String uniqueEmail = "user_" + UUID.randomUUID().toString() + "@example.com";
@@ -108,7 +107,6 @@ public class AuthenticationE2ETest extends BaseE2ETest {
         }
 
         @Test
-        @Disabled("Rollenbasierter Zugriff hat ein Problem mit dem Organizer-Token, das separat gelöst werden muss")
         public void testRoleBasedAccess() {
                 // 1. Registriere einen Teilnehmer
                 String attendeeEmail = "attendee_" + UUID.randomUUID().toString() + "@example.com";
