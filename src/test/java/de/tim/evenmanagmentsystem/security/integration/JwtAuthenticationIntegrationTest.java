@@ -77,7 +77,6 @@ public class JwtAuthenticationIntegrationTest {
                                 .tokenType(TokenType.BEARER)
                                 .expired(false)
                                 .revoked(false)
-                                .createdAt(LocalDateTime.now())
                                 .expiresAt(LocalDateTime.now().plusHours(1))
                                 .user(mockUser)
                                 .build()));
@@ -99,7 +98,6 @@ public class JwtAuthenticationIntegrationTest {
                                 .tokenType(TokenType.REFRESH)
                                 .expired(false)
                                 .revoked(false)
-                                .createdAt(LocalDateTime.now())
                                 .expiresAt(LocalDateTime.now().plusDays(7))
                                 .user(mockUser)
                                 .build()));
@@ -152,7 +150,6 @@ public class JwtAuthenticationIntegrationTest {
                                 .tokenType(TokenType.BEARER)
                                 .expired(true)
                                 .revoked(false)
-                                .createdAt(LocalDateTime.now().minusDays(2))
                                 .expiresAt(LocalDateTime.now().minusDays(1))
                                 .user(mockUser)
                                 .build()));
@@ -182,7 +179,6 @@ public class JwtAuthenticationIntegrationTest {
                                 .tokenType(TokenType.BEARER)
                                 .expired(true)
                                 .revoked(true)
-                                .createdAt(LocalDateTime.now())
                                 .expiresAt(LocalDateTime.now().plusHours(1))
                                 .user(mockUser)
                                 .build()));
@@ -212,7 +208,6 @@ public class JwtAuthenticationIntegrationTest {
                                 .tokenType(TokenType.BEARER)
                                 .expired(false)
                                 .revoked(false)
-                                .createdAt(LocalDateTime.now())
                                 .expiresAt(LocalDateTime.now().plusHours(1))
                                 .user(mockUser)
                                 .build()));
@@ -250,7 +245,6 @@ public class JwtAuthenticationIntegrationTest {
                                 .tokenType(TokenType.BEARER)
                                 .expired(false)
                                 .revoked(false)
-                                .createdAt(LocalDateTime.now())
                                 .expiresAt(LocalDateTime.now().plusHours(1))
                                 .user(mockUser)
                                 .build()));

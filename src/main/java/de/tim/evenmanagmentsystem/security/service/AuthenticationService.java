@@ -306,7 +306,6 @@ public class AuthenticationService {
                 .tokenType(tokenType)
                 .expired(false)
                 .revoked(false)
-                .createdAt(LocalDateTime.now())
                 .expiresAt(expiresAt)
                 .build();
 
@@ -320,6 +319,11 @@ public class AuthenticationService {
      * @param user Der Benutzer, dessen Tokens widerrufen werden sollen
      */
     private void revokeAllUserTokens(User user) {
+        if(user == null || user.getId() == null) {
+            log.warn("Tried to revoke a Token for a null user");
+            return;
+        }
+
         List<Token> validUserTokens = tokenRepository.findAllValidTokensByUser(
                 user.getId(),
                 LocalDateTime.now()

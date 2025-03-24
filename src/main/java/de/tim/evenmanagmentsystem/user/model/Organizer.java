@@ -10,13 +10,12 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Collection;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "organizer")
 @PrimaryKeyJoinColumn(name = "user_id")
-public class Organizer extends User{
+public class Organizer extends User {
     @NotBlank
     @Column(name = "organization_name", nullable = false, unique = true)
     private String organizationName;
@@ -43,7 +42,8 @@ public class Organizer extends User{
     @Column(name = "logo_url")
     private String logoUrl;
 
-    public Organizer() {}
+    public Organizer() {
+    }
 
     public Organizer(String email, String password, String firstName, String lastName, String organizationName, String description, String companyRegistrationNumber, String bankAccountInfo) {
         super(email, password, firstName, lastName);
@@ -107,19 +107,6 @@ public class Organizer extends User{
 
     public void setLogoUrl(String logoUrl) {
         this.logoUrl = logoUrl;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Organizer organizer)) return false;
-        if (!super.equals(o)) return false;
-        return Objects.equals(organizationName, organizer.organizationName);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), organizationName);
     }
 
     @Override

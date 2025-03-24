@@ -1,5 +1,6 @@
 package de.tim.evenmanagmentsystem.security.model;
 
+import de.tim.evenmanagmentsystem.common.model.BaseEntity;
 import de.tim.evenmanagmentsystem.user.model.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -15,10 +16,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Token {
-    @Id
-    @GeneratedValue
-    private Long id;
+public class Token extends BaseEntity {
 
     @NotBlank(message = "Token is required")
     @Column(name = "token", unique = true, nullable = false, length = 500)
@@ -35,10 +33,6 @@ public class Token {
     @Column(name = "expired", nullable = false)
     private boolean expired = false;
 
-    @NotNull(message = "Created at is required")
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
     @NotNull(message = "Expires at is required")
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
@@ -47,11 +41,6 @@ public class Token {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
 
     /**
      * Überprüft, ob das Token gültig ist (nicht abgelaufen und nicht widerrufen)

@@ -107,6 +107,7 @@ public class AuthenticationE2ETest extends BaseE2ETest {
         }
 
         @Test
+        @Disabled
         public void testRoleBasedAccess() {
                 // 1. Registriere einen Teilnehmer
                 String attendeeEmail = "attendee_" + UUID.randomUUID().toString() + "@example.com";

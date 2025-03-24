@@ -295,6 +295,7 @@ public class AuthenticationServiceTest {
         assertEquals(accessToken, response.getAccessToken());
         assertEquals(refreshToken, response.getRefreshToken());
 
+        verify(tokenRepository).findAllValidTokensByUser(eq(3L), any(LocalDateTime.class));
         verify(authenticationManager).authenticate(
                 new UsernamePasswordAuthenticationToken(userEmail, userPassword));
         verify(userRepository).findByEmail(userEmail);

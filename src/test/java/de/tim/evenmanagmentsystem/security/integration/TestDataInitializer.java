@@ -133,7 +133,6 @@ public class TestDataInitializer {
                 .tokenType(TokenType.BEARER)
                 .expired(expired)
                 .revoked(revoked)
-                .createdAt(LocalDateTime.now())
                 .expiresAt(expired ? LocalDateTime.now().minusDays(1) : LocalDateTime.now().plusDays(1))
                 .build();
 

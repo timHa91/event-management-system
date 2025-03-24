@@ -10,16 +10,13 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "attendee")
 @PrimaryKeyJoinColumn(name = "user_id")
-public class Attendee extends User{
+public class Attendee extends User {
 
     @NotBlank
     @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Phone number must be between 10 and 15 digits")
@@ -56,7 +53,8 @@ public class Attendee extends User{
     @Column(name = "emergency_contact_phone")
     private String emergencyContactPhone;
 
-    public Attendee() {}
+    public Attendee() {
+    }
 
     public Attendee(String email, String password, String firstName, String lastName, String phoneNumber, LocalDate dateOfBirth, String address, String city, String postalCode, String country) {
         super(email, password, firstName, lastName);
@@ -159,18 +157,6 @@ public class Attendee extends User{
         this.emergencyContactPhone = emergencyContactPhone;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Attendee attendee)) return false;
-        if (!super.equals(o)) return false;
-        return Objects.equals(phoneNumber, attendee.phoneNumber);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), phoneNumber);
-    }
 
     @Override
     public String toString() {

@@ -134,7 +134,6 @@ public class TokenRepositoryTest {
                 .tokenType(TokenType.BEARER)
                 .revoked(revoked)
                 .expired(expired)
-                .createdAt(LocalDateTime.now())
                 .expiresAt(LocalDateTime.now().plusDays(1))
                 .build();
         return entityManager.persist(token);
