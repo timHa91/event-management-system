@@ -90,34 +90,6 @@ public abstract class BaseEntity implements Serializable {
         this.id = id;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public @NotNull LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public @NotNull LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public @NotBlank String getModifiedBy() {
-        return modifiedBy;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public String getUuid() {
-        return uuid;
-    }
-
-    public Long getVersion() {
-        return version;
-    }
-
     public void setVersion(Long version) {
         this.version = version;
     }
@@ -132,6 +104,34 @@ public abstract class BaseEntity implements Serializable {
 
     public void setUpdatedAt(@NotNull LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public String getModifiedBy() {
+        return modifiedBy;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 
     @Override

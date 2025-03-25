@@ -6,11 +6,14 @@ import de.tim.evenmanagmentsystem.event.model.Event;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.ToString;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
+@ToString(exclude = "events")
 @Table(name = "venue")
 public class Venue extends BaseEntity {
 
@@ -23,24 +26,38 @@ public class Venue extends BaseEntity {
     private Address address;
 
     @OneToMany(mappedBy = "venue", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
-    private Set<Room> rooms = new HashSet<>();
-
-    @OneToMany(mappedBy = "venue", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     private Set<Event> events = new HashSet<>();
+
+    @NotNull
+    @Column(name = "longitude", nullable = false)
+    private Double longitude;
+
+    @NotNull
+    @Column(name = "latitude", nullable = false)
+    private Double latitude;
+
+    @Column(name = "capacity", nullable = false)
+    private int capacity;
 
     public Venue() {
     }
 
-    public Venue(@NotBlank String name, @NotNull Address address) {
-        this.name = name;
-        this.address = address;
+    public Venue(@NotBlank String name, @NotNull Address address,
+                 @NotNull Double longitude, @NotNull Double latitude,
+                 int capacity) {
+
+        setName(name);
+        setAddress(address);
+        setLongitude(longitude);
+        setLatitude(latitude);
+        setCapacity(capacity);
     }
 
-    // Hilfsmethoden für Beziehungsverwaltung
-    public void addEvent(Event event) {
-        if (event != null) {
+    public void addEvent(@NotNull Event event) {
+        Objects.requireNonNull(event, "Event cannot be null");
+
+        if (!events.contains(event)) {
             events.add(event);
-            event.setVenue(this);
 
             if (event.getVenue() != this) {
                 event.setVenue(this);
@@ -48,44 +65,76 @@ public class Venue extends BaseEntity {
         }
     }
 
-    public void removeEvent(Event event) {
-        if (event != null && events.contains(event)) {
+    /**
+     * Entfernt ein Event aus dieser Venue.
+     * ACHTUNG: Diese Methode sollte nur verwendet werden, wenn das Event
+     * einer anderen Venue zugewiesen wird oder gelöscht werden soll.
+     * Ein Event ohne Venue verletzt die Domänenregeln.
+     */
+    public void removeEvent(@NotNull Event event) {
+        Objects.requireNonNull(event, "Event cannot be null");
             events.remove(event);
-            event.setVenue(null);
+            // WICHTIG: Wir setzen hier die Venue nicht auf null,
+            // da ein Event immer eine Venue haben muss.
+            // Diese Methode sollte nur im Kontext eines Venue-Wechsels
+            // oder einer Event-Löschung aufgerufen werden.
+    }
+
+    public void setCapacity(int capacity) {
+        if (capacity <= 0) {
+            throw new IllegalArgumentException("Capacity must be greater than zero");
+        }
+
+        // Prüfen, ob Events mit höherer Kapazität existieren
+        for (Event event : events) {
+            if (event.getCapacity() > capacity) {
+                throw new IllegalArgumentException(
+                        "Cannot reduce venue capacity below capacity of existing events");
+            }
+        }
+
+        this.capacity = capacity;
+    }
+
+    public void setName(@NotBlank String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Name cannot be empty");
         }
     }
 
-    public @NotBlank String getName() {
+    public void setAddress(@NotNull Address address) {
+        this.address = Objects.requireNonNull(address, "Address cannot be null");
+    }
+
+    public void setLatitude(@NotNull Double latitude) {
+        this.latitude = Objects.requireNonNull(latitude, "Latitude cannot be null");
+    }
+
+    public void setLongitude(@NotNull Double longitude) {
+        this.longitude = Objects.requireNonNull(longitude, "Longitude cannot be null");
+    }
+
+    public String getName() {
         return name;
     }
 
-    public @NotNull Address getAddress() {
+    public Address getAddress() {
         return address;
-    }
-
-    public Set<Room> getRooms() {
-        return rooms;
     }
 
     public Set<Event> getEvents() {
         return events;
     }
 
-    public void setName(@NotBlank String name) {
-        this.name = name;
+    public int getCapacity() {
+        return capacity;
     }
 
-    public void setAddress(@NotNull Address address) {
-        this.address = address;
+    public Double getLatitude() {
+        return latitude;
     }
 
-    @Override
-    public String toString() {
-        return "Venue{" +
-                "name='" + name + '\'' +
-                ", address=" + address +
-                ", rooms=" + rooms +
-                ", events=" + events +
-                '}';
+    public Double getLongitude() {
+        return longitude;
     }
 }

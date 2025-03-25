@@ -3,12 +3,15 @@ package de.tim.evenmanagmentsystem.ticket.model;
 import de.tim.evenmanagmentsystem.common.model.BaseEntity;
 import de.tim.evenmanagmentsystem.user.model.Attendee;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.UUID;
 
 @Entity
+@ToString(exclude = {"ticketType", "owner"})
 @Table(name = "ticket")
 public class Ticket extends BaseEntity {
 
@@ -19,7 +22,7 @@ public class Ticket extends BaseEntity {
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false, updatable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private Attendee owner;
 
     @NotNull
@@ -39,12 +42,15 @@ public class Ticket extends BaseEntity {
     private TicketStatus status = TicketStatus.VALID;
 
     public Ticket() {
+        generateTicketCode();
     }
 
-    public Ticket(@NotNull TicketType ticketType, @NotNull Attendee owner, @NotBlank String ticketCode, boolean checkedIn, @NotNull LocalDateTime purchaseDate) {
+    public Ticket(@NotNull TicketType ticketType, @NotNull Attendee owner,
+                  boolean checkedIn, @NotNull LocalDateTime purchaseDate) {
+
+        generateTicketCode();
         this.ticketType = ticketType;
         this.owner = owner;
-        this.ticketCode = ticketCode;
         this.checkedIn = checkedIn;
         this.purchaseDate = purchaseDate;
     }
@@ -67,23 +73,36 @@ public class Ticket extends BaseEntity {
         return false;
     }
 
-    public void setTicketCode(@NotNull String ticketCode) {
-        if (this.ticketCode == null) {
-            this.ticketCode = ticketCode;
-        }
+    private void generateTicketCode() {
+        this.ticketCode = UUID.randomUUID().toString();
     }
 
-    public void setAttendee(@NotNull Attendee attendee) {
-        if (this.owner == null) {
+    public void setOwner(@NotNull Attendee attendee) {
+        Objects.requireNonNull(attendee, "Attendee cannot be null");
+        //TODO: Attende bidirectional
             this.owner = attendee;
-        }
     }
 
-    public @NotNull TicketType getTicketType() {
+    public void setTicketType(@NotNull TicketType ticketType) {
+        this.ticketType = ticketType;
+    }
+
+    public void setStatus(@NotNull TicketStatus status) {
+        this.status = status;
+    }
+
+    public void setPurchaseDate(@NotNull LocalDateTime purchaseDate) {
+        Objects.requireNonNull(purchaseDate, "Purchased time cannot be null");
+
+        this.purchaseDate = purchaseDate;
+    }
+
+
+    public TicketType getTicketType() {
         return ticketType;
     }
 
-    public @NotNull Attendee getOwner() {
+    public Attendee getOwner() {
         return owner;
     }
 
@@ -91,7 +110,7 @@ public class Ticket extends BaseEntity {
         return purchaseDate;
     }
 
-    public @NotNull String getTicketCode() {
+    public String getTicketCode() {
         return ticketCode;
     }
 
@@ -99,23 +118,11 @@ public class Ticket extends BaseEntity {
         return checkedIn;
     }
 
-
-    public void setPurchaseDate(LocalDateTime purchaseDate) {
-        this.purchaseDate = purchaseDate;
+    public TicketStatus getStatus() {
+        return status;
     }
 
-
-    @Override
-    public String toString() {
-        return "Ticket{" +
-                "ticketType=" + ticketType +
-                ", owner=" + owner +
-                ", purchaseDate=" + purchaseDate +
-                ", checkedIn=" + checkedIn +
-                '}';
-    }
-
-     enum TicketStatus {
+    public enum TicketStatus {
         VALID,      // Gültiges Ticket
         USED,       // Bereits verwendet (eingecheckt)
         CANCELLED,  // Storniert

@@ -205,6 +205,26 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Behandelt IllegalArgumentException für Validation errors.
+     *
+     * @param ex Die Exception
+     * @return Eine Fehlerantwort mit HTTP-Status 400 (Bad Request)
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+        log.error("Validation error: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                "VALIDATION_ERROR",
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST.value(),
+                LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    /**
      * Behandelt alle anderen Exceptions.
      *
      * @param ex Die Exception

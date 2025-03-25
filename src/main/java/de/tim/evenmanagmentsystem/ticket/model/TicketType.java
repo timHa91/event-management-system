@@ -5,6 +5,7 @@ import de.tim.evenmanagmentsystem.event.model.Event;
 import de.tim.evenmanagmentsystem.ticket.exception.TicketSoldOutException;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
  * Ein Ticket-Typ definiert die Kategorie, den Preis und die Verfügbarkeit von Tickets.
  */
 @Entity
+@ToString(exclude = "event")
 @Table(name = "ticket_type")
 public class TicketType extends BaseEntity {
 
@@ -84,15 +86,15 @@ public class TicketType extends BaseEntity {
                       @NotNull LocalDateTime salesStart, @NotNull LocalDateTime salesEnd,
                       boolean hasSeating, @NotNull Event event) {
         this.ticketCategory = ticketCategory;
-        setPrice(price); // Verwende Setter für Validierung
+        setPrice(price);
         this.currency = currency;
-        setQuantity(quantity); // Verwende Setter für Validierung
+        setQuantity(quantity);
         this.maxPerOrder = maxPerOrder;
         this.salesStart = salesStart;
         this.salesEnd = salesEnd;
         this.hasSeating = hasSeating;
         this.ticketTypeStatus = TicketTypeStatus.ON_SALE;
-        setEvent(event); // Verwende Setter für bidirektionale Beziehung
+        setEvent(event);
     }
 
     /**
@@ -348,16 +350,5 @@ public class TicketType extends BaseEntity {
 
     public Event getEvent() {
         return event;
-    }
-
-    @Override
-    public String toString() {
-        return "TicketType{" +
-                "ticketCategory=" + ticketCategory +
-                ", price=" + price + " " + currency +
-                ", available=" + getAvailableQuantity() + "/" + quantity +
-                ", salesPeriod=" + salesStart + " to " + salesEnd +
-                ", status=" + ticketTypeStatus +
-                '}';
     }
 }

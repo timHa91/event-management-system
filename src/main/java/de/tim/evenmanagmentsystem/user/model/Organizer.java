@@ -1,18 +1,20 @@
 package de.tim.evenmanagmentsystem.user.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.PrimaryKeyJoinColumn;
-import jakarta.persistence.Table;
+import de.tim.evenmanagmentsystem.event.model.Event;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import lombok.ToString;
 import org.hibernate.validator.constraints.URL;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Entity
+@ToString(exclude = "events")
 @Table(name = "organizer")
 @PrimaryKeyJoinColumn(name = "user_id")
 public class Organizer extends User {
@@ -41,6 +43,9 @@ public class Organizer extends User {
 
     @Column(name = "logo_url")
     private String logoUrl;
+
+    @OneToMany(mappedBy = "organizer", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    private Set<Event> events = new HashSet<>();
 
     public Organizer() {
     }
@@ -109,15 +114,8 @@ public class Organizer extends User {
         this.logoUrl = logoUrl;
     }
 
-    @Override
-    public String toString() {
-        return "Organizer{" +
-                "organizationName='" + organizationName + '\'' +
-                ", description='" + description + '\'' +
-                ", contactPhone='" + contactPhone + '\'' +
-                ", website='" + website + '\'' +
-                ", logoUrl='" + logoUrl + '\'' +
-                '}';
+    public Set<Event> getEvents() {
+        return events;
     }
 
     @Override

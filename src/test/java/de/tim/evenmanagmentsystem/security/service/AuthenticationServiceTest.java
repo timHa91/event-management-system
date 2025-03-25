@@ -300,6 +300,7 @@ public class AuthenticationServiceTest {
         verify(tokenRepository).findAllValidTokensByUser(eq(3L), any(LocalDateTime.class));
         verify(jwtService).generateToken(userDetails);
         verify(jwtService).generateRefreshToken(userDetails);
+
     }
 
     @Test

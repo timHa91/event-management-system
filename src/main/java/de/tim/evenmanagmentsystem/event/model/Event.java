@@ -2,19 +2,23 @@ package de.tim.evenmanagmentsystem.event.model;
 
 import de.tim.evenmanagmentsystem.common.model.BaseEntity;
 import de.tim.evenmanagmentsystem.ticket.model.TicketType;
+import de.tim.evenmanagmentsystem.user.model.Organizer;
 import de.tim.evenmanagmentsystem.venue.model.Venue;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.ToString;
 import org.hibernate.validator.constraints.URL;
 
 import java.time.LocalDateTime;
-import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 
 @Entity
+@ToString(exclude = {"venue", "organizer", "ticketTypes"})
 @Table(name = "event")
 public class Event extends BaseEntity {
 
@@ -22,7 +26,8 @@ public class Event extends BaseEntity {
     @Column(name = "title", nullable = false)
     private String title;
 
-    @Column(name = "description")
+    @Size(max = 2000)
+    @Column(name = "description", length = 2000)
     private String description;
 
     @NotNull
@@ -44,38 +49,69 @@ public class Event extends BaseEntity {
     @ElementCollection
     @CollectionTable(name = "event_categories", joinColumns = @JoinColumn(name = "event_id"))
     @Enumerated(EnumType.STRING)
-    private EnumSet<EventCategory> categories = EnumSet.noneOf(EventCategory.class);
+    private Set<EventCategory> categories = new HashSet<>();
 
     @OneToMany(mappedBy = "event", cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
     private Set<TicketType> ticketTypes = new HashSet<>();
 
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organizer_id", nullable = false)
+    private Organizer organizer;
+
     @URL
-    @Column(name = "imageUrl")
+    @Column(name = "image_url")
     private String imageUrl;
 
     public Event() {
     }
 
-    public Event(@NotBlank String title, @NotNull LocalDateTime startingAt, @NotNull LocalDateTime endingAt, @NotNull Venue venue, int capacity) {
-        this.title = title;
-        this.startingAt = startingAt;
-        this.endingAt = endingAt;
-        this.venue = venue;
-        this.capacity = capacity;
+    public Event(@NotBlank String title, @NotNull LocalDateTime startingAt,
+                 @NotNull LocalDateTime endingAt, @NotNull Venue venue,
+                 int capacity, @NotNull Organizer organizer) {
+
+        setTitle(title);
+        setVenue(venue);
+        setOrganizer(organizer);
+        setStartingAt(startingAt);
+        setEndingAt(endingAt);
+        setCapacity(capacity);
     }
 
-    // Setter für Venue mit Berücksichtigung der bidirektionalen Beziehung
-    public void setVenue(Venue venue) {
-        // Alte Beziehung entfernen, wenn vorhanden
-        if (this.venue != null && venue != null && !this.venue.equals(venue)) {
+    /**
+     * Setzt den organizer von diesem event und managed die bidirectional Beziehung
+     */
+    public void setOrganizer(@NotNull Organizer organizer) {
+        Objects.requireNonNull(organizer, "Organizer cannot be null");
+
+        if (this.organizer == organizer) {
+            return;
+        }
+
+        if (this.organizer != null) {
+            this.organizer.getEvents().remove(this);
+        }
+
+        this.organizer = organizer;
+        organizer.getEvents().add(this);
+    }
+
+    /**
+     * Setzt die venue für dieses event und managed die bidirectional Beziehung
+     */
+    public void setVenue(@NotNull Venue venue) {
+        Objects.requireNonNull(venue, "Venue cannot be null");
+
+        if (this.venue == venue) {
+            return;
+        }
+
+        if (this.venue != null) {
             this.venue.getEvents().remove(this);
         }
-        this.venue = venue;
 
-        // Neue Beziehung setzen
-        if (venue != null) {
-            venue.getEvents().add(this);
-        }
+        this.venue = venue;
+        venue.getEvents().add(this);
     }
 
     public void removeVenue() {
@@ -85,22 +121,24 @@ public class Event extends BaseEntity {
         }
     }
 
-    public void addCategory(EventCategory category) {
-        if (category != null && !this.categories.contains(category)) {
+    public void addCategory(@NotNull EventCategory category) {
+        Objects.requireNonNull(category, "Category cannot be null");
+
+        if (!this.categories.contains(category)) {
             categories.add(category);
         }
     }
 
-    public void removeCategory(EventCategory category) {
-        if (category != null) {
-            this.categories.remove(category);
-        }
+    public void removeCategory(@NotNull EventCategory category) {
+        Objects.requireNonNull(category, "Category cannot be null");
+        this.categories.remove(category);
     }
 
-    public void addTicketType(TicketType ticketType) {
-        if (ticketType != null && !this.ticketTypes.contains(ticketType)) {
+    public void addTicketType(@NotNull TicketType ticketType) {
+        Objects.requireNonNull(ticketType, "TicketType cannot be null");
 
-            // Entferne TicketType von dem bereits zugeordneten Event, falls vorhanden
+        if (!this.ticketTypes.contains(ticketType)) {
+
             if (ticketType.getEvent() != null && ticketType.getEvent() != this) {
                 ticketType.getEvent().removeTicketType(ticketType);
             }
@@ -110,62 +148,103 @@ public class Event extends BaseEntity {
         }
     }
 
-    public void removeTicketType(TicketType ticketType) {
-        if (ticketType != null && this.ticketTypes.contains(ticketType)) {
+    public void removeTicketType(@NotNull TicketType ticketType) {
+        Objects.requireNonNull(ticketType, "TicketType cannot be null");
+
+        if (this.ticketTypes.contains(ticketType)) {
             this.ticketTypes.remove(ticketType);
 
-            // Entferne das Event, nur wenn es zum aktuellen(this) passt
             if (ticketType.getEvent() == this) {
                 ticketType.setEvent(null);
             }
         }
     }
 
-    public @NotNull Venue getVenue() {
-        return venue;
+    public void setStartingAt(@NotNull LocalDateTime startingAt) {
+        Objects.requireNonNull(startingAt, "Starting time cannot be null");
+
+        LocalDateTime now = LocalDateTime.now();
+        if (startingAt.isBefore(now)) {
+            throw new IllegalArgumentException("Starting at must be in the future");
+        }
+
+        this.startingAt = startingAt;
     }
 
-    public @NotBlank String getTitle() {
-        return title;
+    public void setEndingAt(@NotNull LocalDateTime endingAt) {
+        Objects.requireNonNull(endingAt, "Ending time cannot be null");
+
+        if (endingAt.isBefore(startingAt)) {
+            throw new IllegalArgumentException("Ending at must be after starting at");
+        }
+        this.endingAt = endingAt;
+    }
+
+    public void setCapacity(int capacity) {
+        if (capacity <= 0) {
+            throw new IllegalArgumentException("Capacity must be greater than zero");
+        }
+
+        if (venue == null) {
+            throw new IllegalArgumentException("Venue must be set before capacity can be validated");
+        }
+
+        if (venue.getCapacity() < capacity) {
+            throw new IllegalArgumentException(
+                    String.format("Event capacity (%d) cannot exceed venue capacity (%d)",
+                            capacity, venue.getCapacity()));
+        }
+
+        this.capacity = capacity;
+    }
+
+    public void setImageUrl(@URL String imageUrl) {
+        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+            throw new IllegalArgumentException("Image url cannot be null or empty");
+        }
+        this.imageUrl = imageUrl;
     }
 
     public void setTitle(@NotBlank String title) {
+        if (title == null || title.trim().isEmpty()) {
+            throw new IllegalArgumentException("Title cannot be null or empty");
+        }
         this.title = title;
+    }
+
+    public void setDescription(@Size(max = 2000) String description) {
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Description cannot be null or empty");
+        }
+        this.description = description;
+    }
+
+    // Getter-Methoden
+    public Venue getVenue() {
+        return venue;
+    }
+
+    public String getTitle() {
+        return title;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public @NotNull LocalDateTime getStartingAt() {
+    public LocalDateTime getStartingAt() {
         return startingAt;
     }
 
-    public void setStartingAt(@NotNull LocalDateTime startingAt) {
-        this.startingAt = startingAt;
-    }
-
-    public @NotNull LocalDateTime getEndingAt() {
+    public LocalDateTime getEndingAt() {
         return endingAt;
-    }
-
-    public void setEndingAt(@NotNull LocalDateTime endingAt) {
-        this.endingAt = endingAt;
     }
 
     public int getCapacity() {
         return capacity;
     }
 
-    public void setCapacity(int capacity) {
-        this.capacity = capacity;
-    }
-
-    public EnumSet<EventCategory> getCategories() {
+    public Set<EventCategory> getCategories() {
         return categories;
     }
 
@@ -173,26 +252,11 @@ public class Event extends BaseEntity {
         return ticketTypes;
     }
 
-    public @URL String getImageUrl() {
+    public String getImageUrl() {
         return imageUrl;
     }
 
-    public void setImageUrl(@URL String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    @Override
-    public String toString() {
-        return "Event{" +
-                "ticketTypes=" + ticketTypes +
-                ", title='" + title + '\'' +
-                ", description='" + description + '\'' +
-                ", startingAt=" + startingAt +
-                ", endingAt=" + endingAt +
-                ", venue=" + venue +
-                ", capacity=" + capacity +
-                ", categories=" + categories +
-                ", imageUrl='" + imageUrl + '\'' +
-                '}';
+    public Organizer getOrganizer() {
+        return organizer;
     }
 }
