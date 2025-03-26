@@ -87,7 +87,6 @@ public class TestDataInitializer {
         attendee.setActive(true);
 
         Set<UserRole> roles = new HashSet<>();
-        roles.add(UserRole.ROLE_USER);
         roles.add(UserRole.ROLE_ATTENDEE);
         attendee.setRoles(roles);
 
@@ -111,7 +110,6 @@ public class TestDataInitializer {
         organizer.setActive(true);
 
         Set<UserRole> roles = new HashSet<>();
-        roles.add(UserRole.ROLE_USER);
         roles.add(UserRole.ROLE_ORGANIZER);
         organizer.setRoles(roles);
 

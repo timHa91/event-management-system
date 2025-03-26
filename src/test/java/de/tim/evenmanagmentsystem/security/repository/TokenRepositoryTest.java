@@ -33,7 +33,7 @@ public class TokenRepositoryTest {
     void shouldFindTokenByTokenString() {
         // Given
         User user = createAndPersistUser("test@example.com", "1");
-        Token token = createAndPersistToken("token123", user, false, false);
+        createAndPersistToken("token123", user, false, false);
 
         // When
         Optional<Token> foundToken = tokenRepository.findByToken("token123");
@@ -48,7 +48,7 @@ public class TokenRepositoryTest {
     void shouldNotFindTokenByNonExistentTokenString() {
         // Given
         User user = createAndPersistUser("test@example.com", "2");
-        Token token = createAndPersistToken("token123", user, false, false);
+        createAndPersistToken("token123", user, false, false);
 
         // When
         Optional<Token> foundToken = tokenRepository.findByToken("nonexistent");
@@ -63,13 +63,13 @@ public class TokenRepositoryTest {
         User user = createAndPersistUser("test@example.com", "3");
 
         // Erstelle 3 Token für den Benutzer, 2 gültig, 1 widerrufen
-        Token validToken1 = createAndPersistToken("token1", user, false, false);
-        Token validToken2 = createAndPersistToken("token2", user, false, false);
-        Token revokedToken = createAndPersistToken("token3", user, true, false);
+        createAndPersistToken("token1", user, false, false);
+        createAndPersistToken("token2", user, false, false);
+        createAndPersistToken("token3", user, true, false);
 
         // Erstelle ein Token für einen anderen Benutzer
         User otherUser = createAndPersistUser("other@example.com", "4");
-        Token otherUserToken = createAndPersistToken("token4", otherUser, false, false);
+        createAndPersistToken("token4", otherUser, false, false);
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -116,9 +116,9 @@ public class TokenRepositoryTest {
                 "Test",
                 "User",
                 "12345678901" + uniqueIdentifier,  // Gültige Telefonnummer mit 11+ Ziffern
-                LocalDate.of(1991, 10, 4),
-                new Address()
+                LocalDate.of(1991, 10, 4)
         );
+        user.setAddress(new Address("Test", "Test", "Test", "Test"));
         user.setUserStatus(UserStatus.ACTIVE);
         user.setActive(true);
 

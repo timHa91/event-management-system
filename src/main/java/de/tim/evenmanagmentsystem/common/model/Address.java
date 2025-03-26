@@ -6,11 +6,13 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Embeddable
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
 public class Address {
     @NotBlank
     @Column(name = "street", nullable = false)
@@ -30,15 +32,5 @@ public class Address {
 
     public String getFormatedAddress() {
         return String.format("%s, %s, %s, %s", street, city, country, zip);
-    }
-
-    @Override
-    public String toString() {
-        return "Address{" +
-                "street='" + street + '\'' +
-                ", city='" + city + '\'' +
-                ", country='" + country + '\'' +
-                ", zip='" + zip + '\'' +
-                '}';
     }
 }

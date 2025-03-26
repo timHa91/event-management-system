@@ -86,24 +86,32 @@ public abstract class BaseEntity implements Serializable {
         this.active = false;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setId(@NotNull Long id) {
+        if (this.id == null && id != null) {
+            this.id = id;
+        }
     }
 
-    public void setVersion(Long version) {
+    public void setVersion(@NotNull Long version) {
         this.version = version;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
-    }
-
     public void setModifiedBy(@NotBlank String modifiedBy) {
+        if (modifiedBy == null || modifiedBy.trim().isEmpty()) {
+            modifiedBy = "system";
+        }
         this.modifiedBy = modifiedBy;
     }
 
     public void setUpdatedAt(@NotNull LocalDateTime updatedAt) {
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+        }
         this.updatedAt = updatedAt;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     public Long getId() {

@@ -73,11 +73,15 @@ public abstract class BaseE2ETest {
         registrationRequest.put("password", password);
         registrationRequest.put("firstName", "Test");
         registrationRequest.put("lastName", "User");
-        // Telefonnummer mit 10 Stellen generieren (zwischen 10-15 erforderlich)
+
         String randomDigits = String.format("123%07d", (int) (Math.random() * 10000000));
         registrationRequest.put("phoneNumber", randomDigits);
         registrationRequest.put("dateOfBirth", "1990-01-01");
-        registrationRequest.put("address", new Address("city", "state", "zip", "country"));
+
+        registrationRequest.put("street", "Teststreet");
+        registrationRequest.put("city", "Testcity");
+        registrationRequest.put("country", "Testcountry");
+        registrationRequest.put("zip", "12345");
 
         Response response = RestAssured.given()
                 .contentType(ContentType.JSON)

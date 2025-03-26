@@ -4,12 +4,14 @@ import de.tim.evenmanagmentsystem.common.model.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -48,26 +50,69 @@ public abstract class User extends BaseEntity implements UserDetails {
     @Column(name = "role")
     private Set<UserRole> roles = new HashSet<>();
 
-
     public User() {
     }
 
-    public User(String email, String password, String firstName, String lastName) {
-        this.email = email;
-        this.password = password;
-        this.firstName = firstName;
-        this.lastName = lastName;
+    public User(@NotBlank String email, @NotBlank String password,
+                @NotBlank String firstName, @NotBlank String lastName) {
+
+        setEmail(email);
+        setPassword(password);
+        setFirstName(firstName);
+        setLastName(lastName);
     }
 
     public void removeRole(UserRole role) {
+        Objects.requireNonNull(role, "Role cannot be null");
         this.roles.remove(role);
     }
 
     public void setRoles(Set<UserRole> roles) {
+        Objects.requireNonNull(roles, "roles must not be null");
         this.roles.clear();
-        if (roles != null) {
-            this.roles.addAll(roles);
+        this.roles.addAll(roles);
+    }
+
+    public void setEmail(@Email String email) {
+        Objects.requireNonNull(email, "Email cannot be null");
+        if (email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email cannot be empty");
         }
+        this.email = email;
+    }
+
+    public void setFirstName(@NotBlank String firstName) {
+        Objects.requireNonNull(firstName, "First name cannot be null");
+        if (firstName.trim().isEmpty()) {
+            throw new IllegalArgumentException("First name cannot be empty");
+        }
+        this.firstName = firstName;
+    }
+
+    public void setPassword(@Size(min = 8, max = 60) @NotBlank String password) {
+        Objects.requireNonNull(password, "Password cannot be null");
+        if (password.trim().isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be empty");
+        }
+        this.password = password;
+    }
+
+    public void setUserStatus(@NotNull UserStatus userStatus) {
+        Objects.requireNonNull(userStatus, "UserStatus cannot be null");
+        this.userStatus = userStatus;
+    }
+
+    public void setLastName(@NotBlank String lastName) {
+        Objects.requireNonNull(lastName, "Last name cannot be null");
+        if (lastName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Last name cannot be empty");
+        }
+        this.lastName = lastName;
+    }
+
+    public void addRole(@NotNull UserRole role) {
+        Objects.requireNonNull(role, "Role cannot be null");
+        this.roles.add(role);
     }
 
     public String getFullName() {
@@ -78,57 +123,24 @@ public abstract class User extends BaseEntity implements UserDetails {
         return Collections.unmodifiableSet(roles);
     }
 
-    public void addRole(UserRole role) {
-        this.roles.add(role);
-    }
-
     public boolean hasRole(UserRole role) {
         return this.roles.contains(role);
     }
 
-    public @Email String getEmail() {
+    public String getEmail() {
         return email;
     }
 
-    public void setEmail(@Email String email) {
-        this.email = email;
-    }
-
-    public void setPassword(@Size(min = 8, max = 60) @NotBlank String password) {
-        this.password = password;
-    }
-
-    public @NotBlank String getFirstName() {
+    public String getFirstName() {
         return firstName;
     }
 
-    public void setFirstName(@NotBlank String firstName) {
-        this.firstName = firstName;
-    }
-
-    public @NotBlank String getLastName() {
+    public String getLastName() {
         return lastName;
     }
 
     public UserStatus getUserStatus() {
         return userStatus;
-    }
-
-    public void setUserStatus(UserStatus userStatus) {
-        this.userStatus = userStatus;
-    }
-
-    public void setLastName(@NotBlank String lastName) {
-        this.lastName = lastName;
-    }
-
-    @Override
-    public String toString() {
-        return "User{" +
-                ", email='" + email + '\'' +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                '}';
     }
 
     @Override
@@ -154,5 +166,14 @@ public abstract class User extends BaseEntity implements UserDetails {
     @Override
     public String getUsername() {
         return this.email;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                ", email='" + email + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                '}';
     }
 }

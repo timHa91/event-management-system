@@ -150,14 +150,7 @@ public class Event extends BaseEntity {
 
     public void removeTicketType(@NotNull TicketType ticketType) {
         Objects.requireNonNull(ticketType, "TicketType cannot be null");
-
-        if (this.ticketTypes.contains(ticketType)) {
-            this.ticketTypes.remove(ticketType);
-
-            if (ticketType.getEvent() == this) {
-                ticketType.setEvent(null);
-            }
-        }
+        this.ticketTypes.remove(ticketType);
     }
 
     public void setStartingAt(@NotNull LocalDateTime startingAt) {

@@ -130,7 +130,6 @@ public class AuthenticationServiceTest {
         attendee.setFirstName("John");
         attendee.setLastName("Doe");
         attendee.setActive(true);
-        attendee.addRole(UserRole.ROLE_USER);
         attendee.addRole(UserRole.ROLE_ATTENDEE);
 
         // Organizer-Entität
@@ -142,7 +141,6 @@ public class AuthenticationServiceTest {
         organizer.setLastName("Smith");
         organizer.setOrganizationName("Test Organization");
         organizer.setActive(true);
-        organizer.addRole(UserRole.ROLE_USER);
         organizer.addRole(UserRole.ROLE_ORGANIZER);
     }
 

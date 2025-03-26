@@ -9,6 +9,7 @@ import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * Repräsentiert einen Ticket-Typ für ein Event.
@@ -72,43 +73,43 @@ public class TicketType extends BaseEntity {
     @JoinColumn(name = "event_id", nullable = false, updatable = false)
     private Event event;
 
-    /**
-     * Standardkonstruktor für JPA
-     */
     public TicketType() {
     }
 
-    /**
-     * Erstellt einen neuen Ticket-Typ mit den angegebenen Eigenschaften
-     */
     public TicketType(@NotNull TicketCategory ticketCategory, @NotNull BigDecimal price,
                       @NotNull Currency currency, int quantity, Integer maxPerOrder,
                       @NotNull LocalDateTime salesStart, @NotNull LocalDateTime salesEnd,
                       boolean hasSeating, @NotNull Event event) {
-        this.ticketCategory = ticketCategory;
+
+        setTicketCategory(ticketCategory);
         setPrice(price);
-        this.currency = currency;
+        setCurrency(currency);
         setQuantity(quantity);
-        this.maxPerOrder = maxPerOrder;
-        this.salesStart = salesStart;
-        this.salesEnd = salesEnd;
-        this.hasSeating = hasSeating;
-        this.ticketTypeStatus = TicketTypeStatus.ON_SALE;
+        setMaxPerOrder(maxPerOrder);
+        setSalesStart(salesStart);
+        setSalesEnd(salesEnd);
+
+        // Validiere, dass salesEnd nach salesStart liegt
+        if (salesEnd.isBefore(salesStart)) {
+            throw new IllegalArgumentException("Sales end cannot be before sales start");
+        }
+
+        setHasSeating(hasSeating);
         setEvent(event);
     }
 
     /**
      * Setzt das Event für diesen Ticket-Typ und aktualisiert die bidirektionale Beziehung
      */
-    public void setEvent(Event event) {
+    public void setEvent(@NotNull Event event) {
+        Objects.requireNonNull(event, "Event cannot be null");
+
         if (this.event != null && this.event != event) {
             this.event.getTicketTypes().remove(this);
         }
         this.event = event;
 
-        if (event != null && !event.getTicketTypes().contains(this)) {
-            event.getTicketTypes().add(this);
-        }
+        event.getTicketTypes().add(this);
     }
 
     /**
@@ -119,6 +120,13 @@ public class TicketType extends BaseEntity {
             this.event.getTicketTypes().remove(this);
             this.event = null;
         }
+    }
+
+    /**
+     * Prüft, ob der Ticket-Typ aktiv ist (nicht storniert)
+     */
+    public boolean isActive() {
+        return ticketTypeStatus != TicketTypeStatus.CANCELLED;
     }
 
     /**
@@ -148,17 +156,25 @@ public class TicketType extends BaseEntity {
 
     /**
      * Kauft die angegebene Anzahl von Tickets
+     *
      * @throws TicketSoldOutException wenn die Tickets nicht verfügbar sind oder die Menge das Limit überschreitet
      */
     public void purchase(int requestedQuantity) {
-        if (canPurchase(requestedQuantity)) {
-            sold += requestedQuantity;
-            if (sold >= quantity) {
-                this.ticketTypeStatus = TicketTypeStatus.SOLD_OUT;
-            }
-        } else {
-            throw new TicketSoldOutException("Cannot purchase tickets: not available or quantity exceeds limit");
+        if (!isAvailable()) {
+            throw new TicketSoldOutException("Tickets are not available for purchase");
         }
+
+        if (sold + requestedQuantity > quantity) {
+            throw new TicketSoldOutException("Not enough tickets available. Requested: " + requestedQuantity +
+                    ", Available: " + getAvailableQuantity());
+        }
+
+        if (maxPerOrder != null && requestedQuantity > maxPerOrder) {
+            throw new TicketSoldOutException("Requested quantity exceeds maximum allowed per order (" + maxPerOrder + ")");
+        }
+
+        sold += requestedQuantity;
+        updateStatus();
     }
 
     /**
@@ -177,6 +193,13 @@ public class TicketType extends BaseEntity {
         } else {
             ticketTypeStatus = TicketTypeStatus.ON_SALE;
         }
+    }
+
+    /**
+     * Zentrale Methode zur Aktualisierung des Status nach relevanten Änderungen
+     */
+    public void updateStatus() {
+        updateTicketStatus();
     }
 
     /**
@@ -200,52 +223,17 @@ public class TicketType extends BaseEntity {
                 ticketTypeStatus == TicketTypeStatus.ON_SALE;
     }
 
-    /**
-     * Gibt die Anzahl der noch verfügbaren Tickets zurück
-     */
-    public int getAvailableQuantity() {
-        return Math.max(0, quantity - sold);
-    }
-
-    // Getter und Setter
-
-    public @NotNull TicketCategory getTicketCategory() {
-        return ticketCategory;
-    }
-
     public void setTicketCategory(@NotNull TicketCategory ticketCategory) {
+        Objects.requireNonNull(ticketCategory, "Ticket Category cannot be null");
         this.ticketCategory = ticketCategory;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public @NotNull BigDecimal getPrice() {
-        return price;
-    }
-
     public void setPrice(@NotNull BigDecimal price) {
+        Objects.requireNonNull(price, "Price cannot be null");
         if (price.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Price cannot be negative");
         }
         this.price = price;
-    }
-
-    public @NotNull Currency getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(@NotNull Currency currency) {
-        this.currency = currency;
-    }
-
-    public int getQuantity() {
-        return quantity;
     }
 
     public void setQuantity(int quantity) {
@@ -254,18 +242,15 @@ public class TicketType extends BaseEntity {
         }
         this.quantity = quantity;
         // Aktualisieren des Status, wenn die Menge geändert wird
-        if (quantity <= sold && isActive()) {
-            this.ticketTypeStatus = TicketTypeStatus.SOLD_OUT;
-        } else {
-            updateTicketStatus();
-        }
+        updateStatus();
     }
 
-    public int getSold() {
-        return sold;
-    }
-
-    public void setSold(int sold) {
+    /**
+     * Setzt die Anzahl der verkauften Tickets.
+     * Diese Methode sollte nur für interne Zwecke oder Datenmigration verwendet werden.
+     * Für normale Verkaufsvorgänge sollte purchase() verwendet werden.
+     */
+    protected void setSold(int sold) {
         if (sold < 0) {
             throw new IllegalArgumentException("Sold count cannot be negative");
         }
@@ -273,16 +258,7 @@ public class TicketType extends BaseEntity {
             throw new IllegalArgumentException("Sold count cannot exceed quantity");
         }
         this.sold = sold;
-        // Aktualisieren des Status, wenn die verkaufte Menge geändert wird
-        if (sold >= quantity && isActive()) {
-            this.ticketTypeStatus = TicketTypeStatus.SOLD_OUT;
-        } else {
-            updateTicketStatus();
-        }
-    }
-
-    public Integer getMaxPerOrder() {
-        return maxPerOrder;
+        updateStatus();
     }
 
     public void setMaxPerOrder(Integer maxPerOrder) {
@@ -292,22 +268,103 @@ public class TicketType extends BaseEntity {
         this.maxPerOrder = maxPerOrder;
     }
 
-    public @NotNull LocalDateTime getSalesStart() {
-        return salesStart;
-    }
-
     public void setSalesStart(@NotNull LocalDateTime salesStart) {
+        Objects.requireNonNull(salesStart, "Sales start cannot be null");
         this.salesStart = salesStart;
-        updateTicketStatus();
-    }
 
-    public @NotNull LocalDateTime getSalesEnd() {
-        return salesEnd;
+        // Überprüfe salesEnd, falls es bereits gesetzt ist
+        if (this.salesEnd != null && this.salesEnd.isBefore(salesStart)) {
+            throw new IllegalArgumentException("Sales end cannot be before sales start");
+        }
+
+        updateStatus();
     }
 
     public void setSalesEnd(@NotNull LocalDateTime salesEnd) {
+        Objects.requireNonNull(salesEnd, "Sales end cannot be null");
+
+        // Überprüfe salesStart, falls es bereits gesetzt ist
+        if (this.salesStart != null && salesEnd.isBefore(this.salesStart)) {
+            throw new IllegalArgumentException("Sales end cannot be before sales start");
+        }
+
         this.salesEnd = salesEnd;
-        updateTicketStatus();
+        updateStatus();
+    }
+
+    public void setServiceFee(BigDecimal serviceFee) {
+        if (serviceFee != null && serviceFee.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Service fee cannot be negative");
+        }
+        this.serviceFee = serviceFee;
+    }
+
+    public void setMinimumAge(Integer minimumAge) {
+        if (minimumAge != null && minimumAge < 0) {
+            throw new IllegalArgumentException("Minimum age cannot be negative");
+        }
+        this.minimumAge = minimumAge;
+    }
+
+    public void setDescription(String description) {
+        if (description != null && description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Description cannot be empty");
+        }
+        this.description = description;
+    }
+
+    public void setCurrency(@NotNull Currency currency) {
+        Objects.requireNonNull(currency, "Currency cannot be null");
+        this.currency = currency;
+    }
+
+    public void setTicketTypeStatus(TicketTypeStatus ticketTypeStatus) {
+        Objects.requireNonNull(ticketTypeStatus, "Ticket type status cannot be null");
+        this.ticketTypeStatus = ticketTypeStatus;
+    }
+
+    /**
+     * Gibt die Anzahl der noch verfügbaren Tickets zurück
+     */
+    public int getAvailableQuantity() {
+        return Math.max(0, quantity - sold);
+    }
+
+    // Getter
+    public TicketCategory getTicketCategory() {
+        return ticketCategory;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public Currency getCurrency() {
+        return currency;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public int getSold() {
+        return sold;
+    }
+
+    public Integer getMaxPerOrder() {
+        return maxPerOrder;
+    }
+
+    public LocalDateTime getSalesStart() {
+        return salesStart;
+    }
+
+    public LocalDateTime getSalesEnd() {
+        return salesEnd;
     }
 
     public boolean hasSeating() {
@@ -322,30 +379,12 @@ public class TicketType extends BaseEntity {
         return serviceFee;
     }
 
-    public void setServiceFee(BigDecimal serviceFee) {
-        if (serviceFee != null && serviceFee.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Service fee cannot be negative");
-        }
-        this.serviceFee = serviceFee;
-    }
-
     public Integer getMinimumAge() {
         return minimumAge;
     }
 
-    public void setMinimumAge(Integer minimumAge) {
-        if (minimumAge != null && minimumAge < 0) {
-            throw new IllegalArgumentException("Minimum age cannot be negative");
-        }
-        this.minimumAge = minimumAge;
-    }
-
     public TicketTypeStatus getTicketTypeStatus() {
         return ticketTypeStatus;
-    }
-
-    public void setTicketTypeStatus(TicketTypeStatus ticketTypeStatus) {
-        this.ticketTypeStatus = ticketTypeStatus;
     }
 
     public Event getEvent() {

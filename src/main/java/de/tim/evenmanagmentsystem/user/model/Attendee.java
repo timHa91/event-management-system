@@ -1,17 +1,20 @@
 package de.tim.evenmanagmentsystem.user.model;
 
 import de.tim.evenmanagmentsystem.common.model.Address;
+import de.tim.evenmanagmentsystem.ticket.model.Ticket;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.Collection;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
+@ToString(exclude = "ticket")
 @Table(name = "attendee")
 @PrimaryKeyJoinColumn(name = "user_id")
 public class Attendee extends User {
@@ -27,7 +30,7 @@ public class Attendee extends User {
     private LocalDate dateOfBirth;
 
     @Embedded
-    @Column(name = "address", nullable = false)
+    @Column(name = "address")
     private Address address;
 
     @Column(name = "receive_notifications")
@@ -39,14 +42,18 @@ public class Attendee extends User {
     @Column(name = "emergency_contact_phone")
     private String emergencyContactPhone;
 
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Ticket> ticket = new ArrayList<>();
+
     public Attendee() {
     }
 
-    public Attendee(String email, String password, String firstName, String lastName, String phoneNumber, LocalDate dateOfBirth, Address address) {
+    public Attendee(@NotBlank String email, @NotBlank String password, @NotBlank String firstName,
+                    @NotBlank String lastName, @NotBlank String phoneNumber,
+                    @NotNull LocalDate dateOfBirth) {
         super(email, password, firstName, lastName);
-        this.phoneNumber = phoneNumber;
-        this.dateOfBirth = dateOfBirth;
-        this.address = address;
+        setPhoneNumber(phoneNumber);
+        setDateOfBirth(dateOfBirth);
     }
 
     // Validierung für zusammengehörige Felder
@@ -56,6 +63,56 @@ public class Attendee extends User {
                 (emergencyContactName != null && emergencyContactPhone != null);
     }
 
+    public void addTicket(@NotNull Ticket ticket) {
+        Objects.requireNonNull(ticket, "ticket cannot be null");
+        if (ticket.getOwner() == this) {
+            return;
+        }
+        this.ticket.add(ticket);
+        ticket.setOwner(this);
+    }
+
+    public void removeTicket(@NotNull Ticket ticket) {
+        Objects.requireNonNull(ticket, "ticket cannot be null");
+        this.ticket.remove(ticket);
+        ticket.setOwner(null);
+    }
+
+    public void setPhoneNumber(@NotBlank String phoneNumber) {
+        if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+            throw new IllegalArgumentException("Phone number cannot be empty");
+        }
+        this.phoneNumber = phoneNumber;
+    }
+
+    public void setDateOfBirth(@NotNull LocalDate dateOfBirth) {
+        if (dateOfBirth == null || dateOfBirth.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("Date of birth cannot be null or in the future");
+        }
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public void setEmergencyContactName(String emergencyContactName) {
+        if (emergencyContactName != null && emergencyContactName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Emergency contact name cannot be empty");
+        }
+        this.emergencyContactName = emergencyContactName;
+    }
+
+    public void setEmergencyContactPhone(String emergencyContactPhone) {
+        if (emergencyContactPhone.trim().isEmpty()) {
+            throw new IllegalArgumentException("Emergency contact phone cannot be empty");
+        }
+        this.emergencyContactPhone = emergencyContactPhone;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+
+    public void setReceiveNotifications(boolean receiveNotifications) {
+        this.receiveNotifications = receiveNotifications;
+    }
 
     public int getAge() {
         return Period.between(dateOfBirth, LocalDate.now()).getYears();
@@ -65,60 +122,28 @@ public class Attendee extends User {
         return phoneNumber;
     }
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public @NotNull LocalDate getDateOfBirth() {
+    public LocalDate getDateOfBirth() {
         return dateOfBirth;
-    }
-
-    public void setDateOfBirth(@NotNull LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
     }
 
     public Address getAddress() {
         return address;
     }
 
-    public void setAddress(Address address) {
-        this.address = address;
-    }
-
     public boolean isReceiveNotifications() {
         return receiveNotifications;
-    }
-
-    public void setReceiveNotifications(boolean receiveNotifications) {
-        this.receiveNotifications = receiveNotifications;
     }
 
     public String getEmergencyContactName() {
         return emergencyContactName;
     }
 
-    public void setEmergencyContactName(String emergencyContactName) {
-        this.emergencyContactName = emergencyContactName;
-    }
-
     public String getEmergencyContactPhone() {
         return emergencyContactPhone;
     }
 
-    public void setEmergencyContactPhone(String emergencyContactPhone) {
-        this.emergencyContactPhone = emergencyContactPhone;
-    }
-
-
-    @Override
-    public String toString() {
-        return "Attendee{" +
-                "phoneNumber='" + phoneNumber + '\'' +
-                ", dateOfBirth=" + dateOfBirth +
-                ", receiveNotifications=" + receiveNotifications +
-                ", emergencyContactName='" + emergencyContactName + '\'' +
-                ", emergencyContactPhone='" + emergencyContactPhone + '\'' +
-                '}';
+    public List<Ticket> getTicket() {
+        return Collections.unmodifiableList(ticket);
     }
 
     @Override

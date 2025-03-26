@@ -1,5 +1,6 @@
 package de.tim.evenmanagmentsystem.security.service;
 
+import de.tim.evenmanagmentsystem.common.model.Address;
 import de.tim.evenmanagmentsystem.security.dto.AuthenticationRequest;
 import de.tim.evenmanagmentsystem.security.dto.AuthenticationResponse;
 import de.tim.evenmanagmentsystem.security.dto.RefreshTokenRequest;
@@ -64,15 +65,12 @@ public class AuthenticationService {
      */
     @Transactional
     public AuthenticationResponse registerAttendee(RegistrationRequest request) {
-        // Überprüfe, ob die E-Mail bereits verwendet wird
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyExistsException("Email already in use: " + request.getEmail());
         }
 
-        // Validiere attendee-spezifische Felder
         validateAttendeeFields(request);
 
-        // Erstelle Attendee-Entität
         Attendee attendee = new Attendee();
         attendee.setEmail(request.getEmail());
         attendee.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -80,27 +78,27 @@ public class AuthenticationService {
         attendee.setLastName(request.getLastName());
         attendee.setPhoneNumber(request.getPhoneNumber());
         attendee.setDateOfBirth(request.getDateOfBirth());
-        attendee.setAddress(request.getAddress());
 
-        // Setze Standardwerte
+        Address address = Address.builder()
+                .street(request.getStreet())
+                .city(request.getCity())
+                .country(request.getCountry())
+                .zip(request.getZip())
+                .build();
+        attendee.setAddress(address);
+
         attendee.setActive(true);
 
-        // Setze Rollen
-        attendee.addRole(UserRole.ROLE_USER);
         attendee.addRole(UserRole.ROLE_ATTENDEE);
 
-        // Speichere Attendee
         attendee = attendeeRepository.save(attendee);
 
-        // Generiere Tokens
         UserDetails userDetails = userDetailsService.loadUserByUsername(attendee.getEmail());
         String accessToken = jwtService.generateToken(userDetails);
         String refreshToken = jwtService.generateRefreshToken(userDetails);
 
-        // Speichere Access-Token in der Datenbank
         saveToken(attendee, accessToken, TokenType.BEARER, jwtService.extractExpirationAsLocalDateTime(accessToken));
 
-        // Erstelle und gib Antwort zurück
         return buildAuthResponse(attendee, accessToken, refreshToken);
     }
 
@@ -136,7 +134,6 @@ public class AuthenticationService {
         organizer.setActive(true);
 
         // Setze Rollen
-        organizer.addRole(UserRole.ROLE_USER);
         organizer.addRole(UserRole.ROLE_ORGANIZER);
 
         // Speichere Organizer

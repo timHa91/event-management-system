@@ -46,13 +46,12 @@ public class Ticket extends BaseEntity {
     }
 
     public Ticket(@NotNull TicketType ticketType, @NotNull Attendee owner,
-                  boolean checkedIn, @NotNull LocalDateTime purchaseDate) {
+                  @NotNull LocalDateTime purchaseDate) {
 
         generateTicketCode();
-        this.ticketType = ticketType;
-        this.owner = owner;
-        this.checkedIn = checkedIn;
-        this.purchaseDate = purchaseDate;
+        setTicketType(ticketType);
+        setOwner(owner);
+        setPurchaseDate(purchaseDate);
     }
 
     public boolean checkIn() {
@@ -77,26 +76,26 @@ public class Ticket extends BaseEntity {
         this.ticketCode = UUID.randomUUID().toString();
     }
 
-    public void setOwner(@NotNull Attendee attendee) {
+    public void setOwner(Attendee attendee) {
         Objects.requireNonNull(attendee, "Attendee cannot be null");
         //TODO: Attende bidirectional
             this.owner = attendee;
     }
 
     public void setTicketType(@NotNull TicketType ticketType) {
+        Objects.requireNonNull(ticketType, "TicketType cannot be null");
         this.ticketType = ticketType;
     }
 
     public void setStatus(@NotNull TicketStatus status) {
+        Objects.requireNonNull(status, "Status cannot be null");
         this.status = status;
     }
 
     public void setPurchaseDate(@NotNull LocalDateTime purchaseDate) {
         Objects.requireNonNull(purchaseDate, "Purchased time cannot be null");
-
         this.purchaseDate = purchaseDate;
     }
-
 
     public TicketType getTicketType() {
         return ticketType;

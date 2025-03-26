@@ -69,9 +69,24 @@ public class RegistrationRequest {
     private LocalDate dateOfBirth;
 
     /**
-     * Die Adresse des Teilnehmers.
+     * Die Stadt des Teilnehmers.
      */
-    private Address address;
+    private String city;
+
+    /**
+     * Die Straße des Teilnehmers.
+     */
+    private String street;
+
+    /**
+     * Die Postleitzahl des Teilnehmers.
+     */
+    private String zip;
+
+    /**
+     * Das Land des Teilnehmers.
+     */
+    private String country;
 
     // Organizer-spezifische Felder
 
