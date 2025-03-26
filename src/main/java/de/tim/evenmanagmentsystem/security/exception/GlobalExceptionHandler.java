@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
@@ -205,6 +206,46 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Behandelt UserNotFoundException.
+     *
+     * @param ex Die Exception
+     * @return Eine Fehlerantwort mit HTTP-Status 404 (Not Found)
+     */
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex) {
+        log.error(ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                "USER_NOT_FOUND",
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND.value(),
+                LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    /**
+     * Behandelt NotFoundException für Entities.
+     *
+     * @param ex Die Exception
+     * @return Eine Fehlerantwort mit HTTP-Status 404 (Not Found)
+     */
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException ex) {
+        log.error(ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                "ENTITY_NOT_FOUND",
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND.value(),
+                LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    /**
      * Behandelt IllegalArgumentException für Validation errors.
      *
      * @param ex Die Exception
@@ -221,7 +262,27 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now()
         );
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.TOO_MANY_REQUESTS);
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Behandelt IllegalArgumentException für Validation errors.
+     *
+     * @param ex Die Exception
+     * @return Eine Fehlerantwort mit HTTP-Status 400 (Bad Request)
+     */
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAuthorizationDeniedException(AuthorizationDeniedException ex) {
+        log.error("Authorization error: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                "AUTHORIZATION_ERROR",
+                ex.getMessage(),
+                HttpStatus.UNAUTHORIZED.value(),
+                LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
 
     /**

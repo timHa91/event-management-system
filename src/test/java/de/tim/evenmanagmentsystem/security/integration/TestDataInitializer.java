@@ -25,7 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Configuration
-@Profile("test")
+@Profile("auth-test")
 public class TestDataInitializer {
 
     @Bean
@@ -80,7 +80,7 @@ public class TestDataInitializer {
         attendee.setPassword(passwordEncoder.encode("password"));
         attendee.setFirstName("Test");
         attendee.setLastName("Attendee");
-        attendee.setPhoneNumber("1234567890");
+        attendee.setPhoneNumber("+12345678902");
         attendee.setDateOfBirth(LocalDate.of(1991,4,10));
         attendee.setAddress(new Address("city", "state", "zip", "country"));
         attendee.setUserStatus(UserStatus.ACTIVE);
@@ -102,9 +102,9 @@ public class TestDataInitializer {
         organizer.setOrganizationName("Test Organization");
         organizer.setDescription("Test Description");
         organizer.setWebsite("http://www.test.com");
-        organizer.setContactPhone("123457890");
-        organizer.setBankAccountInfo("Test Bankaccount Info");
-        organizer.setCompanyRegistrationNumber("Test Company Registration Number");
+        organizer.setContactPhone("+12345678902");
+        organizer.setBankAccountInfo("1234567890");
+        organizer.setCompanyRegistrationNumber("1234567890");
 
         organizer.setUserStatus(UserStatus.ACTIVE);
         organizer.setActive(true);

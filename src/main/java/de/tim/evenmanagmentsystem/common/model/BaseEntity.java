@@ -19,7 +19,7 @@ import java.util.UUID;
 public abstract class BaseEntity implements Serializable {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull

@@ -2,7 +2,7 @@ package de.tim.evenmanagmentsystem.security.config;
 
 import de.tim.evenmanagmentsystem.security.repository.TokenRepository;
 import de.tim.evenmanagmentsystem.security.service.JwtService;
-import org.mockito.Mockito;
+import de.tim.evenmanagmentsystem.user.repository.OrganizerRepository;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Profile;
@@ -15,15 +15,15 @@ import org.springframework.context.annotation.Profile;
 @Profile("test")
 public class MockJwtServiceConfig {
 
-  /**
-   * Mock für JwtService.
-   */
-  @MockBean
-  private JwtService jwtService;
+    /**
+     * Mock für JwtService.
+     */
+    @MockBean
+    private JwtService jwtService;
 
-  /**
-   * Mock für TokenRepository.
-   */
-  @MockBean
-  private TokenRepository tokenRepository;
+    /**
+     * Mock für TokenRepository.
+     */
+    @MockBean
+    private TokenRepository tokenRepository;
 }

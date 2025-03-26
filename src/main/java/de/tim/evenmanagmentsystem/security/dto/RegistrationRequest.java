@@ -1,12 +1,11 @@
 package de.tim.evenmanagmentsystem.security.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import de.tim.evenmanagmentsystem.common.model.Address;
-import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
@@ -16,9 +15,6 @@ import java.time.LocalDate;
  * Wird sowohl für Attendees als auch für Organizers verwendet.
  */
 @Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL) // Null-Werte werden nicht serialisiert
 public class RegistrationRequest {
 

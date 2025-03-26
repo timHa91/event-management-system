@@ -1,6 +1,9 @@
 package de.tim.evenmanagmentsystem.event.dto;
 
-public class EventUpdateDTO {
+import lombok.Data;
+
+@Data
+public class EventUpdateRequest {
 
     private Long version;
 }

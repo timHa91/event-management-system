@@ -2,19 +2,13 @@ package de.tim.evenmanagmentsystem.security.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * DTO für Authentifizierungsanfragen (Login).
  * Enthält E-Mail und Passwort für die Benutzeranmeldung.
  */
 @Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
 public class AuthenticationRequest {
 
     /**

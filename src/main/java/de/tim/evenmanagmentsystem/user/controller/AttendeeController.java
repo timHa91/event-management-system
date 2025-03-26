@@ -1,6 +1,6 @@
 package de.tim.evenmanagmentsystem.user.controller;
 
-import de.tim.evenmanagmentsystem.ticket.dto.TicketDTO;
+import de.tim.evenmanagmentsystem.ticket.dto.TicketResponse;
 import de.tim.evenmanagmentsystem.ticket.dto.TicketRegistrationDTO;
 import de.tim.evenmanagmentsystem.user.dto.*;
 import de.tim.evenmanagmentsystem.user.service.AttendeeService;
@@ -34,7 +34,7 @@ public class AttendeeController {
     }
 
     @GetMapping("/me/tickets")
-    public ResponseEntity<List<TicketDTO>> getMyTickets(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<TicketResponse>> getMyTickets(@AuthenticationPrincipal UserDetails userDetails) {
         return null;
     }
 

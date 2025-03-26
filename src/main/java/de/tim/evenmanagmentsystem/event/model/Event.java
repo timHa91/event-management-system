@@ -76,6 +76,10 @@ public class Event extends BaseEntity {
         setStartingAt(startingAt);
         setEndingAt(endingAt);
         setCapacity(capacity);
+
+        if (startingAt.isBefore(endingAt)) {
+            throw new IllegalArgumentException("starting at cannot before ending");
+        }
     }
 
     /**
@@ -156,9 +160,8 @@ public class Event extends BaseEntity {
     public void setStartingAt(@NotNull LocalDateTime startingAt) {
         Objects.requireNonNull(startingAt, "Starting time cannot be null");
 
-        LocalDateTime now = LocalDateTime.now();
-        if (startingAt.isBefore(now)) {
-            throw new IllegalArgumentException("Starting at must be in the future");
+    if (this.endingAt != null && startingAt.isAfter(this.endingAt)) {
+            throw new IllegalArgumentException("Starting at must be before ending at");
         }
 
         this.startingAt = startingAt;
@@ -167,7 +170,7 @@ public class Event extends BaseEntity {
     public void setEndingAt(@NotNull LocalDateTime endingAt) {
         Objects.requireNonNull(endingAt, "Ending time cannot be null");
 
-        if (endingAt.isBefore(startingAt)) {
+        if (this.startingAt != null && endingAt.isBefore(this.startingAt)) {
             throw new IllegalArgumentException("Ending at must be after starting at");
         }
         this.endingAt = endingAt;
@@ -210,6 +213,11 @@ public class Event extends BaseEntity {
             throw new IllegalArgumentException("Description cannot be null or empty");
         }
         this.description = description;
+    }
+
+    public void setCategories(Set<EventCategory> categories) {
+        Objects.requireNonNull(categories, "Categories cannot be null");
+        this.categories = categories;
     }
 
     // Getter-Methoden

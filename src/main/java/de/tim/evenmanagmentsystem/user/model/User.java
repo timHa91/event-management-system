@@ -1,5 +1,6 @@
 package de.tim.evenmanagmentsystem.user.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.tim.evenmanagmentsystem.common.model.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -119,6 +120,7 @@ public abstract class User extends BaseEntity implements UserDetails {
         return firstName + " " + lastName;
     }
 
+    @JsonIgnore
     public Set<UserRole> getRoles() {
         return Collections.unmodifiableSet(roles);
     }
@@ -143,21 +145,25 @@ public abstract class User extends BaseEntity implements UserDetails {
         return userStatus;
     }
 
+    @JsonIgnore
     @Override
     public boolean isAccountNonExpired() {
         return userStatus != UserStatus.EXPIRED;
     }
 
+    @JsonIgnore
     @Override
     public boolean isAccountNonLocked() {
         return userStatus != UserStatus.LOCKED;
     }
 
+    @JsonIgnore
     @Override
     public boolean isCredentialsNonExpired() {
         return true; // Oder Implementierung basierend auf einem Passwort-Ablaufdatum
     }
 
+    @JsonIgnore
     @Override
     public String getPassword() {
         return this.password;

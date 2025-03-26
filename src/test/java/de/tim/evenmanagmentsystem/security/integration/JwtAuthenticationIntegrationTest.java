@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
+@ActiveProfiles({"test", "auth-test"})
 @Import(MockJwtServiceConfig.class)
 public class JwtAuthenticationIntegrationTest {
 

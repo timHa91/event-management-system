@@ -360,8 +360,6 @@ public class AuthenticationService {
         } else if (user instanceof Organizer) {
             builder.userType("ORGANIZER");
             builder.organizationName(((Organizer) user).getOrganizationName());
-        } else {
-            builder.userType("USER");
         }
 
         return builder.build();

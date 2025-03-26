@@ -46,6 +46,7 @@ public class Attendee extends User {
     private List<Ticket> ticket = new ArrayList<>();
 
     public Attendee() {
+
     }
 
     public Attendee(@NotBlank String email, @NotBlank String password, @NotBlank String firstName,

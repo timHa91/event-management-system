@@ -12,8 +12,8 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL) // Null-Werte werden nicht serialisiert
 public class AuthenticationResponse {
 
