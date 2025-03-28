@@ -1,8 +1,6 @@
 package de.tim.evenmanagmentsystem.security.e2e;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.restassured.RestAssured;
+import de.tim.evenmanagmentsystem.BaseE2ETest;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +26,7 @@ public class AuthenticationE2ETest extends BaseE2ETest {
     @Test
     public void testCompleteAuthenticationFlow() {
         // 1. Registriere einen neuen Benutzer
-        String uniqueEmail = "user_" + UUID.randomUUID().toString() + "@example.com";
+        String uniqueEmail = "user_" + UUID.randomUUID() + "@example.com";
         String password = "Password123!";
 
         String accessToken = registerAttendee(uniqueEmail, password);

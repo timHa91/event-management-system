@@ -100,6 +100,7 @@ public class Venue extends BaseEntity {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Name cannot be empty");
         }
+        this.name = name;
     }
 
     public void setAddress(@NotNull Address address) {

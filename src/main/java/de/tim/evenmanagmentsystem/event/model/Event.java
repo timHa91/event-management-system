@@ -77,8 +77,8 @@ public class Event extends BaseEntity {
         setEndingAt(endingAt);
         setCapacity(capacity);
 
-        if (startingAt.isBefore(endingAt)) {
-            throw new IllegalArgumentException("starting at cannot before ending");
+        if (startingAt.isAfter(endingAt)) {
+            throw new IllegalArgumentException("starting at cannot after ending");
         }
     }
 

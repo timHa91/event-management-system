@@ -1,4 +1,4 @@
-package de.tim.evenmanagmentsystem.security.integration;
+package de.tim.evenmanagmentsystem;
 
 import de.tim.evenmanagmentsystem.common.model.Address;
 import de.tim.evenmanagmentsystem.security.model.Token;
@@ -25,7 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Configuration
-@Profile("auth-test")
+@Profile("test-data-init")
 public class TestDataInitializer {
 
     @Bean

@@ -1,6 +1,7 @@
 package de.tim.evenmanagmentsystem.event.dto;
 
 import de.tim.evenmanagmentsystem.ticket.dto.TicketTypeRequest;
+import io.swagger.v3.oas.annotations.info.Info;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

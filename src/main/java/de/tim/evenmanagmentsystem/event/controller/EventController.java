@@ -37,7 +37,7 @@ public class EventController {
         return ResponseEntity.ok(null);
     }
 
-    @PreAuthorize("hasRole('ROLE_ORGANIZER')")
+    @PreAuthorize("hasRole('ORGANIZER')")
     @PostMapping
     public ResponseEntity<EventResponse> createEvent(
             @Valid @RequestBody EventRequest eventRequest,

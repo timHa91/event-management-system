@@ -71,13 +71,14 @@ public class AuthenticationService {
 
         validateAttendeeFields(request);
 
-        Attendee attendee = new Attendee();
-        attendee.setEmail(request.getEmail());
-        attendee.setPassword(passwordEncoder.encode(request.getPassword()));
-        attendee.setFirstName(request.getFirstName());
-        attendee.setLastName(request.getLastName());
-        attendee.setPhoneNumber(request.getPhoneNumber());
-        attendee.setDateOfBirth(request.getDateOfBirth());
+        Attendee attendee = new Attendee(
+                request.getEmail(),
+                passwordEncoder.encode(request.getPassword()),
+                request.getFirstName(),
+                request.getLastName(),
+                request.getPhoneNumber(),
+                request.getDateOfBirth()
+        );
 
         Address address = Address.builder()
                 .street(request.getStreet())
@@ -86,11 +87,8 @@ public class AuthenticationService {
                 .zip(request.getZip())
                 .build();
         attendee.setAddress(address);
-
         attendee.setActive(true);
-
         attendee.addRole(UserRole.ROLE_ATTENDEE);
-
         attendee = attendeeRepository.save(attendee);
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(attendee.getEmail());
@@ -111,35 +109,30 @@ public class AuthenticationService {
      */
     @Transactional
     public AuthenticationResponse registerOrganizer(RegistrationRequest request) {
-        // Überprüfe, ob die E-Mail bereits verwendet wird
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyExistsException("Email already in use: " + request.getEmail());
         }
 
-        // Validiere organizer-spezifische Felder
         validateOrganizerFields(request);
 
-        // Erstelle Organizer-Entität
-        Organizer organizer = new Organizer();
-        organizer.setEmail(request.getEmail());
-        organizer.setPassword(passwordEncoder.encode(request.getPassword()));
-        organizer.setFirstName(request.getFirstName());
-        organizer.setLastName(request.getLastName());
-        organizer.setOrganizationName(request.getOrganizationName());
-        organizer.setDescription(request.getDescription());
+        Organizer organizer = new Organizer(
+                request.getEmail(),
+                passwordEncoder.encode(request.getPassword()),
+                request.getFirstName(),
+                request.getLastName(),
+                request.getOrganizationName(),
+                request.getDescription(),
+                request.getCompanyRegistrationNumber(),
+                request.getBankAccountInfo()
+        );
         organizer.setContactPhone(request.getContactPhone());
         organizer.setWebsite(request.getWebsite());
-
-        // Setze Standardwerte
         organizer.setActive(true);
-
-        // Setze Rollen
         organizer.addRole(UserRole.ROLE_ORGANIZER);
 
-        // Speichere Organizer
         organizer = organizerRepository.save(organizer);
 
-        // Generiere Tokens
+        // Generiere Token
         UserDetails userDetails = userDetailsService.loadUserByUsername(organizer.getEmail());
         String accessToken = jwtService.generateToken(userDetails);
         String refreshToken = jwtService.generateRefreshToken(userDetails);
@@ -147,7 +140,6 @@ public class AuthenticationService {
         // Speichere Access-Token in der Datenbank
         saveToken(organizer, accessToken, TokenType.BEARER, jwtService.extractExpirationAsLocalDateTime(accessToken));
 
-        // Erstelle und gib Antwort zurück
         return buildAuthResponse(organizer, accessToken, refreshToken);
     }
 
@@ -354,7 +346,6 @@ public class AuthenticationService {
                 .lastName(user.getLastName())
                 .expiresAt(extractExpiryDate(accessToken));
 
-        // Bestimme Benutzertyp und füge spezifische Informationen hinzu
         if (user instanceof Attendee) {
             builder.userType("ATTENDEE");
         } else if (user instanceof Organizer) {
@@ -405,6 +396,14 @@ public class AuthenticationService {
 
         if (request.getDescription() == null || request.getDescription().isBlank()) {
             throw new IllegalArgumentException("Description is required for organizers");
+        }
+
+        if (request.getCompanyRegistrationNumber() == null || request.getCompanyRegistrationNumber().isBlank()) {
+            throw new IllegalArgumentException("Company Registartion Number is required for organizer");
+        }
+
+        if (request.getBankAccountInfo() == null || request.getBankAccountInfo().isBlank()) {
+            throw new IllegalArgumentException("Bank Account Info is required for organizer");
         }
     }
 }

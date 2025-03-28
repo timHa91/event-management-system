@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.util.Optional;
 
 /**
- * Filter für die JWT-basierte Authentifizierung.
- * Überprüft eingehende Anfragen auf gültige JWTs und setzt den Authentifizierungskontext.
+ * Filter for JWT-based authentication.
+ * Checks incoming requests for valid JWTs and sets the authentication context.
  */
 @Component
 @RequiredArgsConstructor
@@ -35,8 +35,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final TokenRepository tokenRepository;
 
     /**
-     * Hauptmethode des Filters, die für jede eingehende Anfrage aufgerufen wird.
-     * Extrahiert und validiert das JWT und setzt den Authentifizierungskontext.
+     * Main filter method that is called for each incoming request.
+     * Extracts and validates the JWT and sets the authentication context.
      */
     @Override
     protected void doFilterInternal(
@@ -45,58 +45,69 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
         try {
-            // Wenn es ein OPTIONS-Request ist (CORS preflight), überspringen wir die Authentifizierung
+            // If it's an OPTIONS request (CORS preflight), skip authentication
             if (request.getMethod().equals("OPTIONS")) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // Für öffentliche Endpunkte ist keine Authentifizierung erforderlich
-            if (isPublicEndpoint(request.getRequestURI())) {
+            // For public endpoints, no authentication is required
+            if (isPublicEndpoint(request)) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // Extrahiere den Authorization-Header
+            // Extract the Authorization header
             final String authHeader = request.getHeader("Authorization");
 
-            // Wenn kein Authorization-Header vorhanden ist oder er nicht mit Bearer beginnt,
-            // fahre mit der Filterkette fort ohne Authentifizierung
+            log.debug("Auth header: {}", authHeader);
+
+            // If no Authorization header is present or it doesn't start with Bearer,
+            // continue with the filter chain without authentication
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                log.debug("No valid Authorization header found");
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // Extrahiere das JWT aus dem Header (entferne "Bearer ")
+            // Extract the JWT from the header (remove "Bearer ")
             final String jwt = authHeader.substring(7);
 
-            // Extrahiere die E-Mail aus dem JWT
+            log.debug("Extracted JWT: {}", jwt);
+
+            // Extract the email from the JWT
             final String userEmail = jwtService.extractUsername(jwt);
 
-            // Wenn die E-Mail extrahiert werden konnte und der Benutzer noch nicht authentifiziert ist
+            log.debug("Extracted user email: {}", userEmail);
+
+            // If the email could be extracted and the user is not yet authenticated
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // Prüfe, ob das Token in der Datenbank existiert und gültig ist
+                // Check if the token exists in the database and is valid
                 Optional<Token> tokenOptional = tokenRepository.findByToken(jwt);
 
+                log.debug("Token found in DB: {}", tokenOptional.isPresent());
+
                 if (tokenOptional.isPresent() && tokenOptional.get().isValid()) {
-                    // Lade die Benutzerdetails
+                    // Load user details
                     UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
-                    // Wenn das Token gültig ist
+                    log.debug("User details loaded: {}", userDetails != null);
+
+                    // If the token is valid
                     if (jwtService.isTokenValid(jwt, userDetails)) {
-                        // Erstelle ein Authentication-Objekt
+                        // Create an Authentication object
                         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                                 userDetails,
-                                null, // Keine Credentials, da wir bereits authentifiziert sind
-                                userDetails.getAuthorities() // Berechtigungen des Benutzers
+                                null, // No credentials since we're already authenticated
+                                userDetails.getAuthorities() // User permissions
                         );
 
-                        // Füge Request-Details hinzu
+                        // Add request details
                         authToken.setDetails(
                                 new WebAuthenticationDetailsSource().buildDetails(request)
                         );
 
-                        // Setze den Authentication-Kontext
+                        // Set the Authentication context
                         SecurityContextHolder.getContext().setAuthentication(authToken);
 
                         log.debug("User authenticated: {}", userEmail);
@@ -108,26 +119,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
 
-            // Fahre mit der Filterkette fort
+            // Continue with the filter chain
             filterChain.doFilter(request, response);
         } catch (Exception e) {
-            // Logge den Fehler, aber lass die Anfrage weiterlaufen
+            // Log the error but let the request continue
             log.error("JWT authentication error", e);
             filterChain.doFilter(request, response);
         }
     }
 
     /**
-     * Überprüft, ob ein Endpunkt öffentlich ist und keine Authentifizierung erfordert.
+     * Checks if an endpoint is public and requires no authentication.
      *
-     * @param uri Der zu überprüfende URI
-     * @return true, wenn der Endpunkt öffentlich ist, sonst false
+     * @param request The HTTP request to check
+     * @return true if the endpoint is public, otherwise false
      */
-    private boolean isPublicEndpoint(String uri) {
-        return uri.startsWith("/api/auth/") ||
-                uri.equals("/api/events") ||
-                uri.matches("/api/events/\\d+/details") ||
-                uri.startsWith("/swagger-ui/") ||
-                uri.startsWith("/v3/api-docs");
+    private boolean isPublicEndpoint(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        String method = request.getMethod();
+
+        // Auth endpoints are always public
+        if (uri.startsWith("/api/auth/")) {
+            return true;
+        }
+
+        // Swagger/OpenAPI documentation is always public
+        if (uri.startsWith("/swagger-ui/") || uri.startsWith("/v3/api-docs")) {
+            return true;
+        }
+
+        // GET /api/events is public, but POST/PUT/DELETE are not
+        if (uri.equals("/api/events") && method.equals("GET")) {
+            return true;
+        }
+
+        // GET /api/events/{id}/details is public
+        if (uri.matches("/api/events/\\d+/details") && method.equals("GET")) {
+            return true;
+        }
+
+        return false;
     }
 }

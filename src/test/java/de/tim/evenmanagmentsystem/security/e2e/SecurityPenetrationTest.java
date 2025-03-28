@@ -1,5 +1,6 @@
 package de.tim.evenmanagmentsystem.security.e2e;
 
+import de.tim.evenmanagmentsystem.BaseE2ETest;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
