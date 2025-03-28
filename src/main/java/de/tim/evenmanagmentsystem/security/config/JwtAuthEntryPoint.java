@@ -4,6 +4,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.*;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -28,20 +29,28 @@ public class JwtAuthEntryPoint implements AuthenticationEntryPoint {
             HttpServletRequest request,
             HttpServletResponse response,
             AuthenticationException authException
-    ) throws IOException, ServletException {
+    ) throws IOException {
         log.error("Unauthorized error: {}", authException.getMessage());
 
-        // Setze den HTTP-Status auf 401 (Unauthorized)
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
 
-        // Sende eine JSON-Fehlermeldung zurück
-        String errorJson = String.format(
-                "{\"error\":\"unauthorized\",\"message\":\"%s\",\"path\":\"%s\"}",
-                authException.getMessage(),
-                request.getRequestURI()
-        );
+        String authHeader = request.getHeader("Authorization");
 
-        response.getWriter().write(errorJson);
+        String errorMessage;
+        String errorCode;
+        log.error("TOKEN: {}", authHeader);
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            errorMessage = "Authentication required: No valid token provided";
+            errorCode = "NO_TOKEN";
+        } else if (authException instanceof InsufficientAuthenticationException) {
+            errorMessage = "Authentication failed: Insufficient permissions to access this resource";
+            errorCode = "INSUFFICIENT_PERMISSIONS";
+        } else {
+            errorMessage = "Authentication failed: " + authException.getMessage();
+            errorCode = "AUTHENTICATION_FAILED";
+        }
+
+        response.getWriter().write("{\"error\":\"" + errorCode + "\",\"message\":\"" + errorMessage + "\",\"path\":\"" + request.getRequestURI() + "\"}");
     }
 }

@@ -80,24 +80,9 @@ public class JwtAuthenticationFilterTest {
     }
 
     @Test
-    void shouldSkipFilterForPublicEndpoints() throws ServletException, IOException {
-        // Given
-        when(request.getMethod()).thenReturn("GET");
-        when(request.getRequestURI()).thenReturn("/api/auth/login");
-
-        // When
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
-
-        // Then
-        verify(filterChain).doFilter(request, response);
-        verifyNoInteractions(jwtService, userDetailsService, tokenRepository);
-    }
-
-    @Test
     void shouldSkipFilterWhenNoAuthHeader() throws ServletException, IOException {
         // Given
         when(request.getMethod()).thenReturn("GET");
-        when(request.getRequestURI()).thenReturn("/api/users");
         when(request.getHeader("Authorization")).thenReturn(null);
 
         // When
@@ -112,7 +97,6 @@ public class JwtAuthenticationFilterTest {
     void shouldSkipFilterWhenInvalidAuthHeader() throws ServletException, IOException {
         // Given
         when(request.getMethod()).thenReturn("GET");
-        when(request.getRequestURI()).thenReturn("/api/users");
         when(request.getHeader("Authorization")).thenReturn("InvalidHeader");
 
         // When
@@ -127,7 +111,6 @@ public class JwtAuthenticationFilterTest {
     void shouldAuthenticateWithValidToken() throws ServletException, IOException {
         // Given
         when(request.getMethod()).thenReturn("GET");
-        when(request.getRequestURI()).thenReturn("/api/users");
         when(request.getHeader("Authorization")).thenReturn("Bearer " + validToken);
 
         when(jwtService.extractUsername(validToken)).thenReturn(userEmail);
@@ -155,7 +138,6 @@ public class JwtAuthenticationFilterTest {
     void shouldNotAuthenticateWithInvalidToken() throws ServletException, IOException {
         // Given
         when(request.getMethod()).thenReturn("GET");
-        when(request.getRequestURI()).thenReturn("/api/users");
         when(request.getHeader("Authorization")).thenReturn("Bearer " + validToken);
 
         when(jwtService.extractUsername(validToken)).thenReturn(userEmail);
@@ -180,7 +162,6 @@ public class JwtAuthenticationFilterTest {
     void shouldNotAuthenticateWhenTokenNotFound() throws ServletException, IOException {
         // Given
         when(request.getMethod()).thenReturn("GET");
-        when(request.getRequestURI()).thenReturn("/api/users");
         when(request.getHeader("Authorization")).thenReturn("Bearer " + validToken);
 
         when(jwtService.extractUsername(validToken)).thenReturn(userEmail);
@@ -204,7 +185,6 @@ public class JwtAuthenticationFilterTest {
     void shouldHandleExceptionGracefully() throws ServletException, IOException {
         // Given
         when(request.getMethod()).thenReturn("GET");
-        when(request.getRequestURI()).thenReturn("/api/users");
         when(request.getHeader("Authorization")).thenReturn("Bearer " + validToken);
 
         when(jwtService.extractUsername(validToken)).thenThrow(new RuntimeException("Test exception"));

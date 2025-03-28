@@ -76,10 +76,6 @@ public class Event extends BaseEntity {
         setStartingAt(startingAt);
         setEndingAt(endingAt);
         setCapacity(capacity);
-
-        if (startingAt.isAfter(endingAt)) {
-            throw new IllegalArgumentException("starting at cannot after ending");
-        }
     }
 
     /**
@@ -105,6 +101,12 @@ public class Event extends BaseEntity {
      */
     public void setVenue(@NotNull Venue venue) {
         Objects.requireNonNull(venue, "Venue cannot be null");
+
+        if (this.capacity > 0 && venue.getCapacity() < this.capacity) {
+            throw new IllegalArgumentException(
+                    String.format("Event capacity (%d) cannot exceed venue capacity (%d)",
+                            this.capacity, venue.getCapacity()));
+        }
 
         if (this.venue == venue) {
             return;
@@ -171,8 +173,9 @@ public class Event extends BaseEntity {
         Objects.requireNonNull(endingAt, "Ending time cannot be null");
 
         if (this.startingAt != null && endingAt.isBefore(this.startingAt)) {
-            throw new IllegalArgumentException("Ending at must be after starting at");
+            throw new IllegalArgumentException("Ending time must be after starting time");
         }
+
         this.endingAt = endingAt;
     }
 

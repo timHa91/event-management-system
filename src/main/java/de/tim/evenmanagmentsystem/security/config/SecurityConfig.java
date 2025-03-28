@@ -4,6 +4,7 @@ import de.tim.evenmanagmentsystem.security.filter.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -27,7 +28,6 @@ import java.util.List;
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -67,11 +67,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Öffentliche Endpunkte
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/events").permitAll()
                         .requestMatchers("/api/events/*/details").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-                        // Geschützte Endpunkte basierend auf Rollen
+                        // Event
+                        .requestMatchers(HttpMethod.GET,"/api/events").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/events").hasRole("ORGANIZER")
+                        .requestMatchers(HttpMethod.PATCH, "/api/events/**").hasRole("ORGANIZER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/events/**").hasRole("ORGANIZER")
+
+                        // User
                         .requestMatchers("/api/attendees/**").hasRole("ATTENDEE")
                         .requestMatchers("/api/organizers/**").hasRole("ORGANIZER")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -108,7 +113,6 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Erlaubte Ursprünge (z.B. Frontend-URLs)
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:3000", // Lokale Entwicklung
                 "https://youreventapp.com" // Produktions-Frontend

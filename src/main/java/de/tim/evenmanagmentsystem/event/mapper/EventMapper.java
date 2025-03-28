@@ -1,41 +1,51 @@
 package de.tim.evenmanagmentsystem.event.mapper;
 
-import com.sun.jdi.request.EventRequest;
 import de.tim.evenmanagmentsystem.event.dto.EventResponse;
 import de.tim.evenmanagmentsystem.event.model.Event;
 import de.tim.evenmanagmentsystem.event.model.EventCategory;
-import de.tim.evenmanagmentsystem.venue.model.Venue;
-import org.mapstruct.Mapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
-public interface EventMapper {
-    Event toEntity(EventRequest request);
-    EventResponse toResponse(Event event);
+@Component
+@Slf4j
+public class EventMapper {
 
-    default Venue mapVenueIdToVenue(Long venueId) {
-        if (venueId == null) {
-            return null;
-        }
-        Venue venue = new Venue();
-        venue.setId(venueId);
-        return venue;
+    public EventResponse toResponse(final Event event) {
+        return EventResponse.builder()
+                .id(event.getId())
+                .title(event.getTitle())
+                .description(event.getDescription())
+                .startingAt(event.getStartingAt())
+                .endingAt(event.getEndingAt())
+                .venueId(event.getVenue().getId())
+                .venueName(event.getVenue().getName())
+                .venueAddress(event.getVenue().getAddress().getFormatedAddress())
+                .venueCapacity(event.getVenue().getCapacity())
+                .capacity(event.getCapacity())
+                .categories(mapCategoriesToString(event.getCategories()))
+                .organizerId(event.getOrganizer().getId())
+                .organizerName(event.getOrganizer().getOrganizationName())
+                .imageUrl(event.getImageUrl())
+                .build();
     }
 
-    default Set<EventCategory> mapStringsToCategories(Set<String> categories) {
-        if (categories == null) {
-            return new HashSet<>();
-        }
-
+    public Set<String> mapCategoriesToString(final Set<EventCategory> categories) {
         return categories.stream()
-                .map(str -> {
+                .map(Enum::name)
+                .collect(Collectors.toSet());
+    }
+
+    public Set<EventCategory> mapStringsToCategories(final Set<String> categories) {
+        return categories.stream()
+                .map(category -> {
                     try {
-                        return EventCategory.valueOf(str);
+                        return EventCategory.valueOf(category);
                     } catch (IllegalArgumentException e) {
+                        log.warn("Invalid event category: {}", category);
                         return null;
                     }
                 })

@@ -1,16 +1,15 @@
 package de.tim.evenmanagmentsystem.event.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tim.evenmanagmentsystem.event.dto.EventRequest;
 import de.tim.evenmanagmentsystem.event.dto.EventResponse;
-import de.tim.evenmanagmentsystem.event.model.Event;
-import de.tim.evenmanagmentsystem.event.service.EventRepository;
-import de.tim.evenmanagmentsystem.event.service.EventService;
+import de.tim.evenmanagmentsystem.event.respository.EventRepository;
+import de.tim.evenmanagmentsystem.event.service.EventServiceImpl;
 import de.tim.evenmanagmentsystem.user.model.Attendee;
 import de.tim.evenmanagmentsystem.user.model.Organizer;
 import de.tim.evenmanagmentsystem.user.model.UserRole;
 import de.tim.evenmanagmentsystem.user.repository.OrganizerRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +50,7 @@ class EventControllerIntegrationTest {
     private OrganizerRepository organizerRepository;
 
     @MockBean
-    private EventService eventService;
+    private EventServiceImpl eventService;
 
     private Attendee testAttendee;
     private Organizer testOrganizer;
@@ -67,7 +66,7 @@ class EventControllerIntegrationTest {
         testAttendee.setFirstName("Tim");
         testAttendee.setLastName("Evenmanagmentsystem");
         testAttendee.setPassword(passwordEncoder.encode("password"));
-        testAttendee.setDateOfBirth(LocalDate.of(1991,4,10));
+        testAttendee.setDateOfBirth(LocalDate.of(1991, 4, 10));
         testAttendee.setPhoneNumber("+4123123123");
         testAttendee.setRoles(Set.of(UserRole.ROLE_ATTENDEE));
 
@@ -97,8 +96,16 @@ class EventControllerIntegrationTest {
         mockResponse.setId(1L);
         mockResponse.setTitle(validRequest.getTitle());
         mockResponse.setDescription(validRequest.getDescription());
-        mockResponse.setStartDate(validRequest.getStartingAt());
-        mockResponse.setEndDate(validRequest.getEndingAt());
+        mockResponse.setStartingAt(validRequest.getStartingAt());
+        mockResponse.setEndingAt(validRequest.getEndingAt());
+    }
+
+    @AfterEach
+    void tearDown() {
+        eventRepository.deleteAll();
+        organizerRepository.deleteAll();
+
+        reset(eventService);
     }
 
     @Test
@@ -123,10 +130,10 @@ class EventControllerIntegrationTest {
     @Test
     void create_asAttendee_shouldNotCreateEvent_AndThrowException() throws Exception {
         mockMvc.perform(post("/api/events")
-                .with(user(testAttendee))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validRequest)))
-                .andExpect(status().isUnauthorized());
+                        .with(user(testAttendee))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRequest)))
+                .andExpect(status().isForbidden());
 
         verify(eventService, never()).createEvent(any(EventRequest.class), anyLong());
     }

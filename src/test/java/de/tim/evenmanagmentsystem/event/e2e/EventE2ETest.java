@@ -26,7 +26,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ActiveProfiles("test")
-@Slf4j
 class EventE2ETest extends BaseE2ETest {
     @Autowired
     private VenueRepository venueRepository;
@@ -40,14 +39,10 @@ class EventE2ETest extends BaseE2ETest {
     void setUp() {
         initRestAssured();
 
-        // Erzeuge Test-Benutzer und -Tokens
         organizerToken = registerOrganizer("organizer@test.com", "password");
         attendeeToken = registerAttendee("attendee@test.com", "password");
-        log.info("Organizer token: {}", organizerToken);
-        log.info("Attendee token: {}", attendeeToken);
 
         testVenue = createTestVenue();
-        log.info("Created test venue with ID: {}", testVenue.getId());
 
         validRequest = createValidEventRequest(testVenue.getId());
     }
@@ -87,11 +82,11 @@ class EventE2ETest extends BaseE2ETest {
                 .then()
                 .log().ifValidationFails()
                 .statusCode(401)
-                .body("message", containsString("Access Denied"));
+                .body("message", equalTo("Authentication failed: Insufficient permissions to access this resource"));
     }
 
     @Test
-    @DisplayName("Unauthentifizierte Anfragen sollten abgelehnt werden")
+    @DisplayName("Authentifizierte Anfragen sollten abgelehnt werden")
     void createEvent_unauthenticated_shouldReturnUnauthorized() {
         RestAssured.given()
                 .contentType(ContentType.JSON)
@@ -100,7 +95,8 @@ class EventE2ETest extends BaseE2ETest {
                 .post("/api/events")
                 .then()
                 .log().ifValidationFails()
-                .statusCode(401);
+                .statusCode(401)
+                .body("message", equalTo("Authentication required: No valid token provided"));
     }
 
     @Test
@@ -135,7 +131,25 @@ class EventE2ETest extends BaseE2ETest {
                 .post("/api/events")
                 .then()
                 .log().ifValidationFails()
-                .statusCode(400);  // Bad Request erwartet
+                .statusCode(400);
+    }
+
+    @Test
+    @DisplayName("Event mit ungültigen Capacity Daten sollte abgelehnt werden")
+    void createEvent_withInvalidCapacity_shouldReturnBadRequest() {
+        EventRequest invalidRequest = validRequest;
+        invalidRequest.setCapacity(121);
+
+        RestAssured.given()
+                .header("Authorization", "Bearer " + organizerToken)
+                .contentType(ContentType.JSON)
+                .body(invalidRequest)
+                .when()
+                .post("/api/events")
+                .then()
+                .log().ifValidationFails()
+                .statusCode(400)
+                .body("message", equalTo(String.format("Event capacity (%d) cannot exceed venue capacity (%d)", invalidRequest.getCapacity(), testVenue.getCapacity())));
     }
 
     // Hilfsmethoden für die Testdatenerstellung
@@ -165,7 +179,7 @@ class EventE2ETest extends BaseE2ETest {
                 .description("Test description")
                 .capacity(100)
                 .startingAt(startTime)
-                .endingAt(startTime.plusHours(3))  // Realistische Zeitspanne
+                .endingAt(startTime.plusHours(3))
                 .categories(Set.of("FESTIVAL", "ELECTRONIC"))
                 .venueId(venueId)
                 .imageUrl("http://example.com/image.jpg")

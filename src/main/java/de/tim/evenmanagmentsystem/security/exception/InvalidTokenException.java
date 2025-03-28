@@ -1,15 +1,11 @@
 package de.tim.evenmanagmentsystem.security.exception;
 
-/**
- * Exception für den Fall, dass ein Token ungültig ist.
- */
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(HttpStatus.UNAUTHORIZED)
 public class InvalidTokenException extends RuntimeException {
 
-    /**
-     * Erstellt eine neue InvalidTokenException mit der angegebenen Nachricht.
-     *
-     * @param message Die Fehlermeldung
-     */
     public InvalidTokenException(String message) {
         super(message);
     }

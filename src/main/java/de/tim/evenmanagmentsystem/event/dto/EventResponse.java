@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Data
 @Builder
@@ -15,11 +16,17 @@ public class EventResponse {
     private Long id;
     private String title;
     private String description;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
-    private String location;
+    private LocalDateTime startingAt;
+    private LocalDateTime endingAt;
+    private Long venueId;
+    private String venueName;
+    private String venueAddress;
+    private int venueCapacity;
     private int capacity;
-    private String category;
-    private double price;
-    private String currency;
+    private Set<String> categories;
+    private Long organizerId;
+    private String organizerName;
+    private String imageUrl;
+
+    private int availableTickets;
 }

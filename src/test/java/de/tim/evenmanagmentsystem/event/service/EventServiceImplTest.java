@@ -5,6 +5,7 @@ import de.tim.evenmanagmentsystem.event.dto.EventResponse;
 import de.tim.evenmanagmentsystem.event.mapper.EventMapper;
 import de.tim.evenmanagmentsystem.event.model.Event;
 import de.tim.evenmanagmentsystem.event.model.EventCategory;
+import de.tim.evenmanagmentsystem.event.respository.EventRepository;
 import de.tim.evenmanagmentsystem.security.exception.NotFoundException;
 import de.tim.evenmanagmentsystem.security.exception.UserNotFoundException;
 import de.tim.evenmanagmentsystem.user.model.Organizer;
@@ -14,7 +15,6 @@ import de.tim.evenmanagmentsystem.venue.repository.VenueRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -206,6 +206,43 @@ class EventServiceImplTest {
         assertThrows(IllegalArgumentException.class, () -> {
             eventService.createEvent(request, organizerId);
         });
+
+        verify(organizerRepository).findById(organizerId);
+        verify(venueRepository).findById(venueId);
+        verifyNoInteractions(eventRepository);
+    }
+
+    @Test
+    void createEvent_withNotMatchCapacity_shouldThrowException() {
+        // Arrange
+        Long organizerId = 1L;
+        Organizer organizer = new Organizer();
+        organizer.setId(organizerId);
+        organizer.setOrganizationName("Test Org");
+
+        Long venueId = 2L;
+        Venue venue = new Venue();
+        venue.setId(venueId);
+        venue.setName("Test Venue");
+        venue.setCapacity(200);
+
+        var request = EventRequest.builder()
+                .title("Test Title")
+                .description("Test Description")
+                .startingAt(LocalDateTime.now().plusDays(1).plusHours(1))
+                .endingAt(LocalDateTime.now().plusDays(1).plusHours(2))
+                .venueId(venueId)
+                .capacity(201)
+                .categories(Set.of("CONCERT", "THEATER"))
+                .build();
+
+        when(organizerRepository.findById(organizerId)).thenReturn(Optional.of(organizer));
+        when(venueRepository.findById(venueId)).thenReturn(Optional.of(venue));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+           eventService.createEvent(request, organizerId);
+        });
+        assertEquals("Event capacity (201) cannot exceed venue capacity (200)", exception.getMessage());
 
         verify(organizerRepository).findById(organizerId);
         verify(venueRepository).findById(venueId);

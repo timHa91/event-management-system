@@ -104,6 +104,8 @@ public class AuthenticationServiceTest {
         organizerRegistrationRequest.setFirstName("Jane");
         organizerRegistrationRequest.setLastName("Smith");
         organizerRegistrationRequest.setOrganizationName("Test Organization");
+        organizerRegistrationRequest.setCompanyRegistrationNumber("1234567890");
+        organizerRegistrationRequest.setBankAccountInfo("1234567890");
         organizerRegistrationRequest.setDescription("Test Description");
 
         // Setup für Authentifizierung

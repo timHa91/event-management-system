@@ -3,6 +3,7 @@ package de.tim.evenmanagmentsystem.security.config;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@Slf4j
 public class JwtAuthEntryPointTest {
 
     @Mock
@@ -39,7 +41,6 @@ public class JwtAuthEntryPointTest {
         PrintWriter writer = new PrintWriter(stringWriter);
 
         when(authException.getMessage()).thenReturn("Unauthorized");
-        when(request.getRequestURI()).thenReturn("/api/users");
         when(response.getWriter()).thenReturn(writer);
 
         // When
@@ -50,8 +51,7 @@ public class JwtAuthEntryPointTest {
         verify(response).setContentType("application/json");
 
         String responseBody = stringWriter.toString();
-        assertTrue(responseBody.contains("\"error\":\"unauthorized\""));
-        assertTrue(responseBody.contains("\"message\":\"Unauthorized\""));
-        assertTrue(responseBody.contains("\"path\":\"/api/users\""));
+        assertTrue(responseBody.contains("\"error\":\"NO_TOKEN\""));
+        assertTrue(responseBody.contains("\"message\":\"Authentication required: No valid token provided\""));
     }
 }
