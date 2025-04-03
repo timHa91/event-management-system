@@ -11,6 +11,8 @@ import de.tim.evenmanagmentsystem.user.model.UserRole;
 import de.tim.evenmanagmentsystem.user.model.UserStatus;
 import de.tim.evenmanagmentsystem.user.repository.AttendeeRepository;
 import de.tim.evenmanagmentsystem.user.repository.OrganizerRepository;
+import de.tim.evenmanagmentsystem.venue.model.Venue;
+import de.tim.evenmanagmentsystem.venue.repository.VenueRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,7 +36,7 @@ public class TestDataInitializer {
             OrganizerRepository organizerRepository,
             TokenRepository tokenRepository,
             PasswordEncoder passwordEncoder,
-            JwtService jwtService) {
+            JwtService jwtService, VenueRepository venueRepository) {
 
         return args -> {
             // Erstelle Testbenutzer
@@ -43,6 +45,9 @@ public class TestDataInitializer {
 
             Organizer organizer = createTestOrganizer(passwordEncoder);
             organizer = organizerRepository.save(organizer);
+
+            Venue venue = createTestVenue();
+            venueRepository.save(venue);
 
             // Erstelle Tokens für Testbenutzer
             createTokenForUser(attendee, "valid_attendee_token", false, false, tokenRepository);
@@ -114,6 +119,18 @@ public class TestDataInitializer {
         organizer.setRoles(roles);
 
         return organizer;
+    }
+
+    private Venue createTestVenue() {
+        Venue venue = new Venue();
+        venue.setName("Test Venue");
+        venue.setId(1L);
+        venue.setCapacity(200);
+        venue.setLatitude(30.14);
+        venue.setLongitude(20.44);
+        venue.setAddress(new Address("city", "state", "zip", "country"));
+
+        return venue;
     }
 
     private void createTokenForUser(

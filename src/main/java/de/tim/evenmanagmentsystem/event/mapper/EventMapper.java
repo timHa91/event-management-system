@@ -17,6 +17,8 @@ public class EventMapper {
     public EventResponse toResponse(final Event event) {
         return EventResponse.builder()
                 .id(event.getId())
+                .version(event.getVersion())
+                .uuid(event.getUuid())
                 .title(event.getTitle())
                 .description(event.getDescription())
                 .startingAt(event.getStartingAt())
