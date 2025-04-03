@@ -7,8 +7,6 @@ import de.tim.evenmanagmentsystem.event.mapper.EventMapper;
 import de.tim.evenmanagmentsystem.event.model.Event;
 import de.tim.evenmanagmentsystem.event.respository.EventRepository;
 import de.tim.evenmanagmentsystem.security.exception.*;
-import de.tim.evenmanagmentsystem.ticket.model.TicketType;
-import de.tim.evenmanagmentsystem.ticket.repository.TicketRepository;
 import de.tim.evenmanagmentsystem.ticket.repository.TicketTypeRepository;
 import de.tim.evenmanagmentsystem.user.model.Organizer;
 import de.tim.evenmanagmentsystem.user.repository.OrganizerRepository;
@@ -16,7 +14,8 @@ import de.tim.evenmanagmentsystem.venue.model.Venue;
 import de.tim.evenmanagmentsystem.venue.repository.VenueRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.AccessDeniedException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -173,6 +172,14 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventResponse deleteEvent(Long eventId, Long organizerId) {
         return null;
+    }
+
+    @Override
+    public Page<EventResponse> findAll(Pageable pageable) {
+        log.info("Fetching Events with pagination: {}", pageable);
+        Page<Event> foundEvents = eventRepository.findAll(pageable);
+
+        return foundEvents.map(eventMapper::toResponse);
     }
 
     @Override
