@@ -14,6 +14,8 @@ import java.util.Set;
 @AllArgsConstructor
 public class EventResponse {
     private Long id;
+    private Long version;
+    private String uuid;
     private String title;
     private String description;
     private LocalDateTime startingAt;

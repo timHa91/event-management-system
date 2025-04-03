@@ -3,6 +3,7 @@ package de.tim.evenmanagmentsystem.event.dto;
 import de.tim.evenmanagmentsystem.ticket.dto.TicketTypeRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.URL;
 
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 @Data
+@Builder
 public class EventUpdateRequest {
     private Long version;
 

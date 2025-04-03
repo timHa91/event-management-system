@@ -223,28 +223,6 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Behandelt UserNotFoundException.
-     *
-     * @param ex Die Exception
-     * @param request Die WebRequest
-     * @return Eine Fehlerantwort mit HTTP-Status 404 (Not Found)
-     */
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFoundException(
-            UserNotFoundException ex, WebRequest request) {
-        log.error("User not found: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                "USER_NOT_FOUND",
-                ex.getMessage(),
-                HttpStatus.NOT_FOUND.value(),
-                LocalDateTime.now()
-        );
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
-
-    /**
      * Behandelt NotFoundException für Entities.
      *
      * @param ex Die Exception
