@@ -12,9 +12,11 @@ public interface EventService {
 
     EventResponse createEvent(EventRequest request, Long organizerId);
     EventResponse updateEvent(EventUpdateRequest request, String uuid, Long organizerId);
-    EventResponse deleteEvent(Long eventId, Long organizerId);
-    EventResponse getEventById(Long eventId, Long organizerId);
-    List<EventResponse> getEventsByOrganizer(Long organizerId);
+    void deleteEvent(String uuid, Long organizerId);
+
     Page<EventResponse> findAll(Pageable pageable);
+    EventResponse getEventById(Long eventId);
+    Page<EventResponse> getEventsByOrganizer(Long organizerId, Pageable pageable);
+    Page<EventResponse> getEventsByCity(String city, Pageable pageable);
 }
 

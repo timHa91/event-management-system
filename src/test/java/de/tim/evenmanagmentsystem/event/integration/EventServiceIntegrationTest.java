@@ -105,7 +105,7 @@ class EventServiceIntegrationTest {
         event = eventRepository.save(event);
 
         // When
-        EventResponse response = eventService.getEventById(event.getId(), testOrganizer.getId());
+        EventResponse response = eventService.getEventById(event.getId());
 
         // Then
         assertThat(response).isNotNull();

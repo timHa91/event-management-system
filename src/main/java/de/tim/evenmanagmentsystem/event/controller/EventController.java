@@ -18,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Objects;
 
 @RestController
@@ -46,20 +45,29 @@ public class EventController {
             @PathVariable String uuid,
             @RequestBody EventUpdateRequest request,
             @AuthenticationPrincipal User userDetails
-            ) {
+    ) {
         Long userId = Objects.requireNonNull(userDetails.getId(), "User id cannot be null");
         EventResponse response = eventService.updateEvent(request, uuid, userId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    // Public endpoints
+    @DeleteMapping("/{uuid}")
+    public ResponseEntity<EventResponse> deleteEvent(
+            @PathVariable String uuid,
+            @AuthenticationPrincipal User userDetails
+    ) {
+        Long userId = Objects.requireNonNull(userDetails.getId(), "User id cannot be null");
+        eventService.deleteEvent(uuid, userId);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
 
     @GetMapping
     public ResponseEntity<Page<EventResponse>> getAllEvents(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "date") String sortBy,
+            @RequestParam(defaultValue = "startingAt") String sortBy,
             @RequestParam(defaultValue = "desc") String direction
     ) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("asc") ?
@@ -74,7 +82,46 @@ public class EventController {
 
     @GetMapping("/{eventId}/details")
     public ResponseEntity<Object> getEventDetails(@PathVariable Long eventId) {
-        // Für Testzwecke geben wir null zurück
-        return ResponseEntity.ok(null);
+        EventResponse event = eventService.getEventById(eventId);
+
+        return ResponseEntity.ok(event);
+    }
+
+    @GetMapping("/organizer")
+    public ResponseEntity<Page<EventResponse>> getAllEventsByOrganizer(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "startingAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction,
+            @AuthenticationPrincipal User userDetails
+    ) {
+        Long userId = Objects.requireNonNull(userDetails.getId(), "User id cannot be null");
+
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("asc") ?
+                Sort.Direction.ASC : Sort.Direction.DESC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+
+        Page<EventResponse> event = eventService.getEventsByOrganizer(userId, pageable);
+
+        return ResponseEntity.ok(event);
+    }
+
+    @GetMapping("/{city}")
+    public ResponseEntity<Page<EventResponse>> getAllEventsByCity(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "startingAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction,
+            @PathVariable String city
+    ) {
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("asc") ?
+                Sort.Direction.ASC : Sort.Direction.DESC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+
+        Page<EventResponse> events = eventService.getEventsByCity(city, pageable);
+
+        return ResponseEntity.ok(events);
     }
 }

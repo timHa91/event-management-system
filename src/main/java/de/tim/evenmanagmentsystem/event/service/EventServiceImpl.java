@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -170,25 +169,52 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public EventResponse deleteEvent(Long eventId, Long organizerId) {
-        return null;
+    public void deleteEvent(String uuid, Long organizerId) {
+        log.info("Event with UUID {} deleted by organizer {}", uuid, organizerId);
+
+        Event event = eventRepository.findByUuid(uuid)
+                .orElseThrow(() -> new NotFoundException("Event"));
+
+        if (event.getOrganizer().getId().equals(organizerId)) {
+            eventRepository.delete(event);
+        } else {
+            throw new ResourceAccessDeniedException("You are not authorized to delete this event");
+        }
     }
 
     @Override
     public Page<EventResponse> findAll(Pageable pageable) {
-        log.info("Fetching Events with pagination: {}", pageable);
+        log.info("Fetching all Events: {}", pageable);
         Page<Event> foundEvents = eventRepository.findAll(pageable);
 
         return foundEvents.map(eventMapper::toResponse);
     }
 
     @Override
-    public EventResponse getEventById(Long eventId, Long organizerId) {
-        return null;
+    public EventResponse getEventById(Long eventId) {
+        log.info("Fetching Event with ID {}.", eventId);
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Event"));
+
+        return eventMapper.toResponse(event);
     }
 
     @Override
-    public List<EventResponse> getEventsByOrganizer(Long organizerId) {
-        return List.of();
+    public Page<EventResponse> getEventsByOrganizer(Long organizerId, Pageable pageable) {
+        log.info("Fetching Events with pagination: {}", organizerId);
+
+        Page<Event> foundEvent = eventRepository.findByOrganizerId(organizerId, pageable);
+
+        return foundEvent.map(eventMapper::toResponse);
+    }
+
+    @Override
+    public Page<EventResponse> getEventsByCity(String city, Pageable pageable) {
+        log.info("Fetching Events with city: {}", city);
+
+        Page<Event> foundEvents = eventRepository.findByCity(city, pageable);
+
+        return foundEvents.map(eventMapper::toResponse);
     }
 }
