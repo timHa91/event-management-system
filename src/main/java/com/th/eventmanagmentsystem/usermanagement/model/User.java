@@ -47,6 +47,8 @@ public class User extends BasicEntity {
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id")
     )
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
     private Set<UserRole> userRoles = new HashSet<>(); // Default-Wert
 
     /**
@@ -110,10 +112,13 @@ public class User extends BasicEntity {
         this.userRoles.addAll(userRoles);
     }
 
-    private Set<UserRole> getUserRoles() {
+    public Set<UserRole> getUserRoles() {
         return Collections.unmodifiableSet(this.userRoles);
     }
 
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
 
     private void setLastName(String lastName) {
         Objects.requireNonNull(lastName, "Last name cannot be null");
