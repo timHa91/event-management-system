@@ -1,4 +1,4 @@
-package com.th.eventmanagmentsystem.usermanagement.model;
+package com.th.eventmanagmentsystem.usermanagement.domain;
 
 public enum UserStatus {
     ACTIVE,
