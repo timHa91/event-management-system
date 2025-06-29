@@ -1,10 +1,7 @@
 package com.th.eventmanagmentsystem.usermanagement.application.config;
 
 import com.th.eventmanagmentsystem.usermanagement.application.dto.UserRegistrationRequest;
-import com.th.eventmanagmentsystem.usermanagement.domain.policy.AgeRestrictionPolicy;
-import com.th.eventmanagmentsystem.usermanagement.domain.policy.RegistrationPolicy;
-import com.th.eventmanagmentsystem.usermanagement.domain.policy.StrongPasswordPolicy;
-import com.th.eventmanagmentsystem.usermanagement.domain.policy.UniqueEmailPolicy;
+import com.th.eventmanagmentsystem.usermanagement.domain.policy.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -16,7 +13,8 @@ public class RegistrationPolicyConfig {
     @Bean("defaultRegistrationPolicies")
     public List<RegistrationPolicy<UserRegistrationRequest>> defaultRegistrationPolicies(
             UniqueEmailPolicy uniqueEmailPolicy,
-            StrongPasswordPolicy strongPasswordPolicy
+            StrongPasswordPolicy strongPasswordPolicy,
+            EmailFormatPolicy emailFormatPolicy
     ) {
         return List.of(uniqueEmailPolicy, strongPasswordPolicy);
     }
