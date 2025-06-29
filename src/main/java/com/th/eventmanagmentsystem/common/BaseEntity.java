@@ -19,7 +19,7 @@ import java.util.UUID;
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public abstract class BasicEntity implements Serializable {
+public abstract class BaseEntity implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -52,6 +52,7 @@ public abstract class BasicEntity implements Serializable {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
+    // TODO: Timebased uuid
     @NotBlank
     @Column(name = "uuid", nullable = false, updatable = false, unique = true)
     private String uuid = UUID.randomUUID().toString();
@@ -81,7 +82,7 @@ public abstract class BasicEntity implements Serializable {
         }
     }
 
-    protected BasicEntity() {
+    protected BaseEntity() {
     }
 
     public void setUpdatedAt(Instant updatedAt) {
@@ -135,7 +136,7 @@ public abstract class BasicEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof BasicEntity that)) return false;
+        if (!(o instanceof BaseEntity that)) return false;
         return Objects.equals(uuid, that.uuid);
     }
 
