@@ -16,7 +16,7 @@ public class RegistrationPolicyConfig {
             StrongPasswordPolicy strongPasswordPolicy,
             EmailFormatPolicy emailFormatPolicy
     ) {
-        return List.of(uniqueEmailPolicy, strongPasswordPolicy);
+        return List.of(uniqueEmailPolicy, strongPasswordPolicy, emailFormatPolicy);
     }
 
     @Bean("strongRegistrationPolicies")
