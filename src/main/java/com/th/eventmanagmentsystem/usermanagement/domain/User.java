@@ -137,7 +137,7 @@ public class User extends BaseEntity {
     }
 
     public void setPassword(String password) {
-        Objects.requireNonNull(password, "Passowrd cannot be null");
+        Objects.requireNonNull(password, "Password cannot be null");
 
         if (password.trim().isEmpty()) {
             throw new IllegalArgumentException("Password cannot be empty");
