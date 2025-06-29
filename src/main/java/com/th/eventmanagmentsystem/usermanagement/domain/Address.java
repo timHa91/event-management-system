@@ -1,4 +1,4 @@
-package com.th.eventmanagmentsystem.usermanagement.model;
+package com.th.eventmanagmentsystem.usermanagement.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
