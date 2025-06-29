@@ -3,6 +3,7 @@ package com.th.eventmanagmentsystem.usermanagement.domain.policy;
 import com.th.eventmanagmentsystem.usermanagement.application.dto.UserRegistrationRequest;
 import com.th.eventmanagmentsystem.usermanagement.domain.UserRepository;
 import com.th.eventmanagmentsystem.usermanagement.domain.exception.EmailAlreadyExistsException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,6 +22,7 @@ class UniqueEmailPolicyTest {
     UniqueEmailPolicy uniqueEmailPolicy;
 
     @Test
+    @DisplayName("Check sollte keine Exception werfen wenn Email unique ist")
     void whenEmailIsUnique_checkShouldPass() {
         //Arrange
         String validEmail = "test@test.com";
@@ -34,6 +36,7 @@ class UniqueEmailPolicyTest {
         assertDoesNotThrow(() -> uniqueEmailPolicy.check(request));
     }
 
+    @DisplayName("Check solte eine Exception werfen wenn Email bereits existiert")
     @Test
     void whenEmailAlreadyExits_checkShouldThrowException() {
         // Arrange
