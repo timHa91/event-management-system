@@ -23,7 +23,6 @@ public class User extends BaseEntity {
 
     @Email(message = "Das E-Mail-Format ist ungültig.")
     @NotBlank(message = "Die E-Mail-Adresse darf nicht leer sein.")
-//    @UniqueEmail(message = "Diese E-Mail-Adresse wird bereits verwendet.")
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
