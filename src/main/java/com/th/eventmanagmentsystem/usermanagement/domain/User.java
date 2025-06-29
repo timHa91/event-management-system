@@ -94,21 +94,21 @@ public class User extends BaseEntity {
     }
 
     private void setProfile(UserProfile userProfile) {
-        Objects.requireNonNull(userProfile, "User Profile cannot be null");
-
-        if (this.profile != null && !this.profile.equals(userProfile)) {
-            throw new IllegalStateException("This user is already assigned to a another User Profile");
-        }
-
-        if (userProfile.getUser() != null && !userProfile.getUser().equals(this)) {
-            throw new IllegalArgumentException("User Profile is already assigned to another User");
-        }
+//        Objects.requireNonNull(userProfile, "User Profile cannot be null");
+//
+//        if (this.profile != null && !this.profile.equals(userProfile)) {
+//            throw new IllegalStateException("This user is already assigned to a another User Profile");
+//        }
+//
+//        if (userProfile.getUser() != null && !userProfile.getUser().equals(this)) {
+//            throw new IllegalArgumentException("User Profile is already assigned to another User");
+//        }
 
         this.profile = userProfile;
 
-        if (userProfile.getUser() == null) {
-            userProfile.setUser(this);
-        }
+//        if (userProfile.getUser() == null) {
+//            userProfile.setUser(this);
+//        }
     }
 
     // Rollenverwaltungsmethoden
