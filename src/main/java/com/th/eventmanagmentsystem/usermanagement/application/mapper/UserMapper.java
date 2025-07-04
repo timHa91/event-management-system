@@ -2,40 +2,29 @@ package com.th.eventmanagmentsystem.usermanagement.application.mapper;
 
 import com.th.eventmanagmentsystem.usermanagement.application.dto.UserRegistrationRequest;
 import com.th.eventmanagmentsystem.usermanagement.application.dto.UserRegistrationResponse;
-import com.th.eventmanagmentsystem.usermanagement.domain.User;
-import com.th.eventmanagmentsystem.usermanagement.domain.UserProfile;
-import com.th.eventmanagmentsystem.usermanagement.domain.UserRole;
-import com.th.eventmanagmentsystem.usermanagement.domain.UserStatus;
+import com.th.eventmanagmentsystem.usermanagement.domain.model.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
-import org.mapstruct.factory.Mappers;
 
 import java.util.Set;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface UserMapper {
-    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
 
-    @Mappings({
-            @Mapping(source = "request.email", target = "email"),
+    default User toUser(UserRegistrationRequest request, String hashedPassword) {
+        EmailAddress email = EmailAddress.of(request.email());
+        UserPassword password = UserPassword.of(hashedPassword);
 
-            @Mapping(source = "password", target = "password"),
-            @Mapping(source = "status", target = "status"),
-            @Mapping(source = "roles", target = "roles")
-    })
-    User requestToUser(
-            UserRegistrationRequest request,
-            String password,
-            UserProfile userProfile,
-            UserStatus status,
-            Set<UserRole> roles
-    );
+        return new User(
+                email,
+                password,
+                UserStatus.INACTIVE,
+                Set.of(UserRole.ROLE_USER)
+        );
+    }
 
-    @Mappings({
-            @Mapping(source = "user.uuid", target = "uuid"),
-            @Mapping(source = "user.email", target = "email"),
-            @Mapping(source = "user.status", target = "status")
-    })
-    UserRegistrationResponse userToResponse(User user);
+    @Mapping(target = "uuid", source = "uuid")
+    @Mapping(target = "email", expression = "java(user.getEmail().email())")
+    @Mapping(target = "status", source = "status")
+    UserRegistrationResponse toResponse(User user);
 }
