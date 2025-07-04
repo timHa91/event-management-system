@@ -3,10 +3,8 @@ package com.th.eventmanagmentsystem.usermanagement.application.registration;
 import com.th.eventmanagmentsystem.usermanagement.application.dto.UserRegistrationRequest;
 import com.th.eventmanagmentsystem.usermanagement.application.dto.UserRegistrationResponse;
 import com.th.eventmanagmentsystem.usermanagement.application.mapper.UserMapper;
-import com.th.eventmanagmentsystem.usermanagement.domain.User;
-import com.th.eventmanagmentsystem.usermanagement.domain.UserRepository;
-import com.th.eventmanagmentsystem.usermanagement.domain.UserRole;
-import com.th.eventmanagmentsystem.usermanagement.domain.UserStatus;
+import com.th.eventmanagmentsystem.usermanagement.domain.model.*;
+import com.th.eventmanagmentsystem.usermanagement.domain.repository.UserRepository;
 import com.th.eventmanagmentsystem.usermanagement.domain.exception.EmailAlreadyExistsException;
 import com.th.eventmanagmentsystem.usermanagement.domain.policy.RegistrationPolicy;
 import org.junit.jupiter.api.Test;
@@ -43,16 +41,29 @@ class RegisterUserUseCaseTest {
     @Captor
     private ArgumentCaptor<User> userArgumentCaptor;
 
+    private final String VALID_HASHED_PASSWORD = "$2a$10$N9qo8uLOickgx2ZMRZoMye.IKbeT_IuTL0Fp2aEMavFXrLbpIRH/O";
+
     @Test
-    void whenRegisterNewUser_withNonExistingEmailAndValidPassword_shouldSucceed() {
+    void whenRegisterFromNewUser_withNonExistingEmailAndValidPassword_shouldSucceed() {
         // Arrange
         String validPassword = "Password123";
         String nonExistingEmail = "test_user@test.com";
-        String hashedPassword = "hashedPassword";
+        String hashedPasswordString = "hashedPassword";
+        UserPassword hashedPassword = UserPassword.of(VALID_HASHED_PASSWORD);
         UserStatus userStatus = UserStatus.INACTIVE;
         UserRegistrationRequest request = new UserRegistrationRequest(nonExistingEmail, validPassword);
-        User userFromMapper = new User();
-        User savedUser = new User();
+        User userFromMapper =  new User(
+                EmailAddress.of(nonExistingEmail),
+                hashedPassword,
+                UserStatus.INACTIVE,
+                Set.of(UserRole.ROLE_USER)
+        );
+        User savedUser = new User(
+                EmailAddress.of(nonExistingEmail),
+                UserPassword.of(VALID_HASHED_PASSWORD),
+                UserStatus.INACTIVE,
+                Set.of(UserRole.ROLE_USER)
+        );
         UserRegistrationResponse finalResponse = new UserRegistrationResponse(
                 "test-uuid",
                 nonExistingEmail,
@@ -60,11 +71,10 @@ class RegisterUserUseCaseTest {
         );
 
         doNothing().when(registrationPolicy).check(request);
-        when(passwordEncoder.encode(validPassword)).thenReturn(hashedPassword);
-        when(userMapper.requestToUser(request, hashedPassword, null,
-                userStatus, Set.of(UserRole.ROLE_USER))).thenReturn(userFromMapper);
+        when(passwordEncoder.encode(validPassword)).thenReturn(hashedPasswordString);
+        when(userMapper.toUser(request, hashedPasswordString)).thenReturn(userFromMapper);
         when(userRepository.save(userFromMapper)).thenReturn(savedUser);
-        when(userMapper.userToResponse(savedUser)).thenReturn(finalResponse);
+        when(userMapper.toResponse(savedUser)).thenReturn(finalResponse);
 
         // Act
         UserRegistrationResponse actualResponse = registerUserUseCase.register(request);
@@ -79,30 +89,27 @@ class RegisterUserUseCaseTest {
     }
 
     @Test
-    void whenRegisterNewUser_shouldSaveUserWithHashedPasswordAndReturnCorrectResponse() {
+    void whenRegisterFromNewUser_shouldSaveUserWithHashedPasswordAndReturnCorrectResponse() {
         // Arrange
         String validPasswordPlain = "plain-text-password";
         String nonExistingEmail = "test_user@test.com";
         UserStatus userStatus = UserStatus.INACTIVE;
         Set<UserRole> roles = Set.of(UserRole.ROLE_USER);
         UserRegistrationRequest request = new UserRegistrationRequest(nonExistingEmail, validPasswordPlain);
-        String expectedHashedPassword = "$2a$10$N9qo8uLOickgx2ZMRZoMye.IKbeT_IuTL0Fp2aEMavFXrLbpIRH/O";
-        User userFromMapper = new User(nonExistingEmail, expectedHashedPassword, userStatus, roles, null);
+        String expectedHashedPassword = VALID_HASHED_PASSWORD;
+        User userFromMapper = new User(EmailAddress.of(nonExistingEmail), UserPassword.of(expectedHashedPassword), userStatus, roles);
 
         UserRegistrationResponse finalResponse = new UserRegistrationResponse("test-uuid", nonExistingEmail, userStatus);
 
         when(passwordEncoder.encode(validPasswordPlain)).thenReturn(expectedHashedPassword);
-        when(userMapper.requestToUser(
+        when(userMapper.toUser(
                 eq(request),
-                eq(expectedHashedPassword),
-                isNull(),
-                eq(userStatus),
-                eq(roles)
+                eq(expectedHashedPassword)
         )).thenReturn(userFromMapper);
 
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        when(userMapper.userToResponse(any(User.class))).thenReturn(finalResponse);
+        when(userMapper.toResponse(any(User.class))).thenReturn(finalResponse);
 
         // Act
         UserRegistrationResponse actualResponse = registerUserUseCase.register(request);
@@ -115,12 +122,12 @@ class RegisterUserUseCaseTest {
         User userPassedToSaveMethod = userArgumentCaptor.getValue();
 
         assertNotNull(userPassedToSaveMethod);
-        assertEquals(expectedHashedPassword, userPassedToSaveMethod.getPassword());
+        assertEquals(expectedHashedPassword, userPassedToSaveMethod.getPassword().hashedPassword());
         assertNotEquals(validPasswordPlain, userPassedToSaveMethod.getPassword());
     }
 
     @Test
-    void whenRegisterNewUser_shouldNotSafeWhenEmailAlreadyExits() {
+    void whenRegisterFromNewUser_shouldNotSafeWhenEmailAlreadyExits() {
         UserRegistrationRequest requestWithDuplicateEmail = new UserRegistrationRequest(
                 "duplicate@example.com",
                 "ValidPassword123!"
@@ -137,7 +144,7 @@ class RegisterUserUseCaseTest {
         assertEquals(expectedErrorMessage, thrownException.getMessage());
 
         verify(passwordEncoder, never()).encode(anyString());
-        verify(userMapper, never()).requestToUser(any(), any(), any(), any(), any());
+        verify(userMapper, never()).toUser(any(), any());
         verify(userRepository, never()).save(any(User.class));
     }
 }

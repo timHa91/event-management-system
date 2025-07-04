@@ -1,7 +1,8 @@
 package com.th.eventmanagmentsystem.usermanagement.domain.policy;
 
 import com.th.eventmanagmentsystem.usermanagement.application.dto.UserRegistrationRequest;
-import com.th.eventmanagmentsystem.usermanagement.domain.UserRepository;
+import com.th.eventmanagmentsystem.usermanagement.domain.model.EmailAddress;
+import com.th.eventmanagmentsystem.usermanagement.domain.repository.UserRepository;
 import com.th.eventmanagmentsystem.usermanagement.domain.exception.EmailAlreadyExistsException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,7 @@ class UniqueEmailPolicyTest {
                 validEmail,
                 "validPassword"
         );
-        when(userRepository.existsByEmail(validEmail)).thenReturn(false);
+        when(userRepository.existsByEmail(EmailAddress.of(validEmail))).thenReturn(false);
 
         // Act & Assert
         assertDoesNotThrow(() -> uniqueEmailPolicy.check(request));
@@ -46,7 +47,7 @@ class UniqueEmailPolicyTest {
                 "validPassword"
         );
         String expectedErrorMessage = "Email already exists";
-        when(userRepository.existsByEmail(duplicateEmail)).thenReturn(true);
+        when(userRepository.existsByEmail(EmailAddress.of(duplicateEmail))).thenReturn(true);
 
         EmailAlreadyExistsException thrownException = assertThrows(EmailAlreadyExistsException.class, () -> {
             uniqueEmailPolicy.check(request);

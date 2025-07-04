@@ -13,10 +13,9 @@ public class RegistrationPolicyConfig {
     @Bean("defaultRegistrationPolicies")
     public List<RegistrationPolicy<UserRegistrationRequest>> defaultRegistrationPolicies(
             UniqueEmailPolicy uniqueEmailPolicy,
-            StrongPasswordPolicy strongPasswordPolicy,
-            EmailFormatPolicy emailFormatPolicy
+            StrongPasswordPolicy strongPasswordPolicy
     ) {
-        return List.of(uniqueEmailPolicy, strongPasswordPolicy, emailFormatPolicy);
+        return List.of(uniqueEmailPolicy, strongPasswordPolicy);
     }
 
     @Bean("strongRegistrationPolicies")
