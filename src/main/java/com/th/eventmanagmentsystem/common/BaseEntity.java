@@ -1,10 +1,6 @@
 package com.th.eventmanagmentsystem.common;
 
-
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -28,7 +24,6 @@ public abstract class BaseEntity implements Serializable {
     private Long id;
 
     @CreatedDate
-    @NotNull
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -37,23 +32,16 @@ public abstract class BaseEntity implements Serializable {
     private Instant updatedAt;
 
     @LastModifiedBy
-    @NotBlank
-    @Size(max = 50)
     @Column(name = "modified_by", nullable = false, length = 50)
-    private String modifiedBy;
+    private String modifiedBy = "system";
 
     @CreatedBy
-    @NotBlank
-    @Size(max = 50)
     @Column(name = "created_by", nullable = false, updatable = false, length = 50)
-    private String createdBy;
+    private String createdBy = "system";
 
-    @NotNull
     @Column(name = "is_active", nullable = false)
-    private Boolean isActive;
+    private Boolean active = true;
 
-    // TODO: Timebased uuid
-    @NotBlank
     @Column(name = "uuid", nullable = false, updatable = false, unique = true)
     private String uuid = UUID.randomUUID().toString();
 
@@ -61,7 +49,7 @@ public abstract class BaseEntity implements Serializable {
     private Long version;
 
     protected void deactivate() {
-        this.isActive = false;
+        this.active = false;
     }
 
     @PrePersist
@@ -69,9 +57,8 @@ public abstract class BaseEntity implements Serializable {
         if (this.createdBy == null || this.createdBy.isEmpty()) {
             this.createdBy = "system";
         }
-
-        if (this.isActive == null) {
-            this.isActive = true;
+        if (this.active == null) {
+            this.active = true;
         }
     }
 
@@ -82,56 +69,15 @@ public abstract class BaseEntity implements Serializable {
         }
     }
 
-    protected BaseEntity() {
-    }
-
-    public void setUpdatedAt(Instant updatedAt) {
-        if (updatedAt == null) {
-            updatedAt = Instant.now();
-        }
-        this.updatedAt = updatedAt;
-    }
-
-
-    public void setModifiedBy(@NotBlank @Size(max = 50) String modifiedBy) {
-        this.modifiedBy = modifiedBy;
-    }
-
-    public void setActive(@NotNull Boolean active) {
-        isActive = active;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public @NotNull Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public @NotBlank @Size(max = 50) String getModifiedBy() {
-        return modifiedBy;
-    }
-
-    public @NotBlank @Size(max = 50) String getCreatedBy() {
-        return createdBy;
-    }
-
-    public @NotNull Boolean isActive() {
-        return isActive;
-    }
-
-    public @NotBlank String getUuid() {
-        return uuid;
-    }
-
-    public Long getVersion() {
-        return version;
-    }
+    // Getter (keine Setter für technische Felder)
+    public Long getId() { return id; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
+    public String getModifiedBy() { return modifiedBy; }
+    public String getCreatedBy() { return createdBy; }
+    public Boolean isActive() { return active; }
+    public String getUuid() { return uuid; }
+    public Long getVersion() { return version; }
 
     @Override
     public boolean equals(Object o) {
@@ -147,13 +93,13 @@ public abstract class BaseEntity implements Serializable {
 
     @Override
     public String toString() {
-        return "BasicEntity{" +
+        return "BaseEntity{" +
                 "id=" + id +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 ", modifiedBy='" + modifiedBy + '\'' +
                 ", createdBy='" + createdBy + '\'' +
-                ", isActive=" + isActive +
+                ", active=" + active +
                 ", uuid='" + uuid + '\'' +
                 ", version=" + version +
                 '}';
