@@ -1,4 +1,4 @@
-package com.th.eventmanagmentsystem.usermanagement.domain;
+package com.th.eventmanagmentsystem.usermanagement.domain.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -12,34 +12,32 @@ import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
 @NoArgsConstructor
 @Getter
 public class AttendeeProfile extends UserProfile {
 
-    @NotBlank
     @Column(name = "first_name", nullable = false)
     private String firstName;
 
-    @NotBlank
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
-    @NotBlank
-    @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Phone number must be between 10 and 15 digits")
     @Column(name = "phone_number", nullable = false, unique = true, length = 20)
     private String phoneNumber;
 
-    @NotNull
-    @Past
     @Column(name = "date_of_birth", nullable = false)
     private LocalDate dateOfBirth;
 
     @Embedded
-    @Column(name = "address")
+    @AttributeOverrides({
+            @AttributeOverride(name = "street", column = @Column(name = "address_street")),
+            @AttributeOverride(name = "houseNumber", column = @Column(name = "address_house_number")),
+            @AttributeOverride(name = "postalCode", column = @Column(name = "address_postal_code")),
+            @AttributeOverride(name = "city", column = @Column(name = "address_city")),
+            @AttributeOverride(name = "country", column = @Column(name = "address_country"))
+    })
     private Address address;
 
-    @NotNull
     @Column(name = "receive_notifications")
     private Boolean receiveNotifications = false;
 

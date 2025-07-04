@@ -1,4 +1,4 @@
-package com.th.eventmanagmentsystem.usermanagement.domain;
+package com.th.eventmanagmentsystem.usermanagement.domain.model;
 
 public enum UserRole {
     ROLE_USER,
