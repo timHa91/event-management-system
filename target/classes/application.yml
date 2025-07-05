@@ -2,8 +2,6 @@ spring:
   flyway:
     enabled: true
     url: jdbc:postgressql://localhost:5432/eventdb
-    user: ra
-    password: password123
     locations: classpath:db/migration
     baseline-on-migrate: true
     validate-on-migrate: true
