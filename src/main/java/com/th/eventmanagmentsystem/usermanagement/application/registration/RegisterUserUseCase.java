@@ -3,14 +3,12 @@ package com.th.eventmanagmentsystem.usermanagement.application.registration;
 import com.th.eventmanagmentsystem.usermanagement.application.dto.UserRegistrationRequest;
 import com.th.eventmanagmentsystem.usermanagement.application.dto.UserRegistrationResponse;
 import com.th.eventmanagmentsystem.usermanagement.application.mapper.UserMapper;
-import com.th.eventmanagmentsystem.usermanagement.domain.exception.EmailAlreadyExistsException;
 import com.th.eventmanagmentsystem.usermanagement.domain.model.User;
 import com.th.eventmanagmentsystem.usermanagement.domain.policy.RegistrationPolicy;
 import com.th.eventmanagmentsystem.usermanagement.domain.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -43,14 +41,9 @@ public class RegisterUserUseCase {
 
         User userToSave = userMapper.toUser(request, encodedPassword);
 
-        try {
-            var savedUser = userRepository.save(userToSave);
-            log.info("Successfully created new user with UUID: {}", savedUser.getUuid());
+        var savedUser = userRepository.save(userToSave);
+        log.info("Successfully created new user with UUID: {}", savedUser.getUuid());
 
-            return userMapper.toResponse(savedUser);
-        } catch (DataIntegrityViolationException e) {
-            log.warn("Data integrity violation for email {}, likely a race condition.", request.email(), e);
-            throw new EmailAlreadyExistsException();
-        }
+        return userMapper.toResponse(savedUser);
     }
 }

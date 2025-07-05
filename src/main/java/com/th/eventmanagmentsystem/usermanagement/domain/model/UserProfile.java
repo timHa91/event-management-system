@@ -1,15 +1,11 @@
 package com.th.eventmanagmentsystem.usermanagement.domain.model;
 
-import com.th.eventmanagmentsystem.common.BaseEntity;
+import com.th.eventmanagmentsystem.common.model.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
-import jakarta.persistence.OneToOne;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.Objects;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)

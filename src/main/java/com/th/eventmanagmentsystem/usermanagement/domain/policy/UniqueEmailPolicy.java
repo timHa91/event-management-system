@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class UniqueEmailPolicy implements RegistrationPolicy<UserRegistrationRequest> {
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @Override
     public void check(UserRegistrationRequest request) {

@@ -1,4 +1,4 @@
-package com.th.eventmanagmentsystem.common;
+package com.th.eventmanagmentsystem.common.model;
 
 import jakarta.persistence.*;
 import org.springframework.data.annotation.CreatedBy;
@@ -32,8 +32,8 @@ public abstract class BaseEntity implements Serializable {
     private Instant updatedAt;
 
     @LastModifiedBy
-    @Column(name = "modified_by", nullable = false, length = 50)
-    private String modifiedBy = "system";
+    @Column(name = "modified_by", length = 50)
+    private String modifiedBy;
 
     @CreatedBy
     @Column(name = "created_by", nullable = false, updatable = false, length = 50)
@@ -69,7 +69,7 @@ public abstract class BaseEntity implements Serializable {
         }
     }
 
-    // Getter (keine Setter für technische Felder)
+    // Getter
     public Long getId() { return id; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

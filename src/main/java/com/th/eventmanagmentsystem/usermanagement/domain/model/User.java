@@ -1,6 +1,6 @@
 package com.th.eventmanagmentsystem.usermanagement.domain.model;
 
-import com.th.eventmanagmentsystem.common.BaseEntity;
+import com.th.eventmanagmentsystem.common.model.BaseEntity;
 import com.th.eventmanagmentsystem.usermanagement.domain.exception.UserStatusUpdateException;
 import com.th.eventmanagmentsystem.usermanagement.infrastructure.persistance.converter.EmailAddressConverter;
 import com.th.eventmanagmentsystem.usermanagement.infrastructure.persistance.converter.UserPasswordConverter;
@@ -36,7 +36,7 @@ public class User extends BaseEntity {
     @CollectionTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id", nullable = false,
-            foreignKey = @ForeignKey(name = "fk_user_role_user"))
+            foreignKey = @ForeignKey(name = "fk_user_roles_user"))
     )
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
